@@ -1,6 +1,133 @@
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="16dp"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <!-- Header: Tên app + icon setting + icon quét mã -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="16dp">
+
+        <TextView
+            android:id="@+id/appName"
+            android:text="Tài khoản"
+            android:textSize="25dp"
+            android:fontFamily="@font/quicksand_medium"
+            android:layout_marginTop="15dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/ic_person"
+            android:drawablePadding="8dp" />
+
+
+        <ImageButton
+            android:id="@+id/btnSettings"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Cài đặt"
+            android:src="@drawable/ic_setting" />
+
+        <ImageButton
+            android:id="@+id/btnScanQRCode"
+            android:layout_toStartOf="@id/btnSettings"
+            android:layout_marginEnd="5dp"
+            android:layout_centerVertical="true"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Quét mã"
+            android:src="@drawable/ic_scan" />
+
+    </RelativeLayout>
+
+    <!-- Các mục chức năng -->
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_marginTop="25dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Cập nhật phần mềm -->
+        <LinearLayout
+            android:id="@+id/btnUpdateSoftware"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_update" />
+
+            <TextView
+                android:text="Cập nhật phần mềm"
+                android:textSize="16sp"
+                android:layout_marginStart="16dp"
+                android:layout_gravity="center_vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- Phản ánh -->
+        <LinearLayout
+            android:id="@+id/btnFeedback"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_reply" />
+
+            <TextView
+                android:text="Phản ánh"
+                android:textSize="16sp"
+                android:layout_marginStart="16dp"
+                android:layout_gravity="center_vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- Đánh giá -->
+        <LinearLayout
+            android:id="@+id/btnRating"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_rate" />
+
+            <TextView
+                android:text="Đánh giá"
+                android:textSize="16sp"
+                android:layout_marginStart="16dp"
+                android:layout_gravity="center_vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>
