@@ -1,6 +1,7 @@
 package com.example.smarthomepvl;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -13,6 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import com.example.smarthomepvl.Device;
+
 
 public class DatabaseHelper {
     private static final String URL = "jdbc:mysql://pvl.vn:3306/admin_db";
@@ -97,7 +101,7 @@ public class DatabaseHelper {
 
     public void loadRoom(RoomCallback callback) {
         executorService.execute(() -> {
-            String query = "SELECT TenPhong FROM smarthome_rooms";
+            String query = "SELECT IDPhong, TenPhong FROM smarthome_rooms";
             List<Room> roomList = new ArrayList<>();
 
             try (Connection conn = connect();
@@ -105,9 +109,10 @@ public class DatabaseHelper {
                  ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
+                    int id = rs.getInt("IDPhong");
                     String name = rs.getString("TenPhong");
                     int iconResId = getIconForRoom(name);
-                    roomList.add(new Room(name, iconResId, R.drawable.room_item_background));
+                    roomList.add(new Room(id,name, iconResId, R.drawable.room_item_background));
                 }
 
                 new Handler(Looper.getMainLooper()).post(() -> callback.onRoomsLoaded(roomList));
@@ -143,29 +148,36 @@ public class DatabaseHelper {
             return false;
         }
     }
-    public void loadDeviceInRoom(RoomCallback callback) {
+    public void loadDeviceInRoom(int idPhong, RoomDetailFragment.DeviceCallback callback) {
         executorService.execute(() -> {
-            String query = "SELECT ID, DiaChiMAC, TenThietBi FROM smarthome_device WHERE IDPhong = ''";
-            List<Room> roomList = new ArrayList<>();
+            String query = "SELECT ID, DiaChiMAC, TenThietBi FROM smarthome_device WHERE IDPhong = ?";
+            List<Device> deviceList = new ArrayList<>();
 
             try (Connection conn = connect();
-                 PreparedStatement ps = conn.prepareStatement(query);
-                 ResultSet rs = ps.executeQuery()) {
+                 PreparedStatement ps = conn.prepareStatement(query)) {
+
+                ps.setInt(1, idPhong);
+                ResultSet rs = ps.executeQuery();
 
                 while (rs.next()) {
-                    String name = rs.getString("TenPhong");
-                    int iconResId = getIconForRoom(name);
-                    roomList.add(new Room(name, iconResId, R.drawable.room_item_background));
+                    int id = rs.getInt("ID");
+                    String mac = rs.getString("DiaChiMAC");
+                    String ten = rs.getString("TenThietBi");
+
+                    deviceList.add(new Device(id, mac, ten));
                 }
 
-                new Handler(Looper.getMainLooper()).post(() -> callback.onRoomsLoaded(roomList));
+                new Handler(Looper.getMainLooper()).post(() -> callback.onDevicesLoaded(deviceList));
 
             } catch (Exception e) {
                 e.printStackTrace();
-                new Handler(Looper.getMainLooper()).post(() -> callback.onError("Lỗi khi tải phòng"));
+                new Handler(Looper.getMainLooper()).post(() -> callback.onError("Lỗi khi tải thiết bị"));
             }
         });
     }
+
+
+
 
     public static boolean updateUser(String oldusername, String newusername, String password, String phone, String email) {
         String query = "INSERT INTO quanlykho_users (Username = ?, Password = ?, Phone = ?, Email = ? WHERE Username = ?)";

@@ -4,7 +4,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -18,7 +17,7 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
     private OnRoomClickListener listener;
 
     public interface OnRoomClickListener {
-        void onRoomClick(String roomName);
+        void onRoomClick(Room room);
     }
 
     public RoomAdapter(List<Room> roomList, OnRoomClickListener listener) {
@@ -29,18 +28,15 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
     @NonNull
     @Override
     public RoomViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_room, parent, false);
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_room, parent, false);
         return new RoomViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull RoomViewHolder holder, int position) {
         Room room = roomList.get(position);
-        holder.txtRoomName.setText(room.getName());
-        holder.imgRoomIcon.setImageResource(room.getIconResId());
-        holder.roomItemLayout.setBackgroundResource(room.getBackgroundResId());
-
-        holder.itemView.setOnClickListener(v -> listener.onRoomClick(room.getName()));
+        holder.bind(room);
     }
 
     @Override
@@ -48,16 +44,30 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
         return roomList.size();
     }
 
-    public static class RoomViewHolder extends RecyclerView.ViewHolder {
-        TextView txtRoomName;
+    class RoomViewHolder extends RecyclerView.ViewHolder {
         ImageView imgRoomIcon;
-        LinearLayout roomItemLayout;
+        TextView txtRoomName;
+        View roomItemLayout;
 
         public RoomViewHolder(@NonNull View itemView) {
             super(itemView);
-            txtRoomName = itemView.findViewById(R.id.txtRoomName);
             imgRoomIcon = itemView.findViewById(R.id.imgRoomIcon);
+            txtRoomName = itemView.findViewById(R.id.txtRoomName);
             roomItemLayout = itemView.findViewById(R.id.roomItemLayout);
+        }
+
+        public void bind(Room room) {
+            txtRoomName.setText(room.getName());
+            imgRoomIcon.setImageResource(room.getIconResId());
+
+            // Nếu bạn muốn đổi màu/tùy biến nền theo room.getBackgroundResId()
+            roomItemLayout.setBackgroundResource(room.getBackgroundResId());
+
+            itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onRoomClick(room);
+                }
+            });
         }
     }
 }

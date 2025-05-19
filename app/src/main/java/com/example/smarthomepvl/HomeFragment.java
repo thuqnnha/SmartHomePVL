@@ -88,8 +88,8 @@ public class HomeFragment extends Fragment {
         db.loadRoom(new DatabaseHelper.RoomCallback() {
             @Override
             public void onRoomsLoaded(List<Room> rooms) {
-                RoomAdapter adapter = new RoomAdapter(rooms, roomName -> {
-                    RoomDetailFragment fragment = RoomDetailFragment.newInstance(roomName);
+                RoomAdapter adapter = new RoomAdapter(rooms, room -> {
+                    RoomDetailFragment fragment = RoomDetailFragment.newInstance(room.getId(), room.getName());
                     getParentFragmentManager()
                             .beginTransaction()
                             .replace(R.id.fragment_container, fragment)
