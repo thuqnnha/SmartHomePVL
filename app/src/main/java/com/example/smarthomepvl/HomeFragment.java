@@ -1,9 +1,14 @@
 package com.example.smarthomepvl;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -18,13 +23,15 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class HomeFragment extends Fragment {
 
     private RecyclerView recyclerRooms;
     private FloatingActionButton btnAddRoom;
-    //private List<String> rooms = new ArrayList<>(Arrays.asList("Phòng khách", "Phòng ngủ 1", "Phòng ngủ 2", "Phòng bếp"));
-
+    private DatabaseHelper db;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Nullable
     @Override
@@ -35,34 +42,74 @@ public class HomeFragment extends Fragment {
         recyclerRooms = view.findViewById(R.id.recyclerRooms);
         btnAddRoom = view.findViewById(R.id.btnAddRoom);
 
-        List<Room> roomList = new ArrayList<>();
-        roomList.add(new Room("Phòng khách", R.drawable.ic_living_room, R.drawable.room_item_background));
-        roomList.add(new Room("Phòng ngủ 1", R.drawable.ic_bedroom, R.drawable.room_item_background));
-        roomList.add(new Room("Phòng bếp", R.drawable.ic_kitchen, R.drawable.room_item_background));
-
         recyclerRooms.setLayoutManager(new LinearLayoutManager(getContext()));
-        RoomAdapter adapter = new RoomAdapter(roomList, roomName -> {
-            // Mở RoomDetailFragment với roomName
-            RoomDetailFragment fragment = RoomDetailFragment.newInstance(roomName);
 
-            // Thay fragment container trong Activity hoặc Fragment cha
-            FragmentManager fm = getParentFragmentManager(); // Hoặc getActivity().getSupportFragmentManager();
-            fm.beginTransaction()
-                    .replace(R.id.fragment_container, fragment) // fragment_container là id FrameLayout chứa fragment
-                    .addToBackStack(null)
-                    .commit();
-        });
-        recyclerRooms.setAdapter(adapter);
-
+        loadRooms();
 
         btnAddRoom.setOnClickListener(v -> {
-//            // TODO: Xử lý thêm phòng mới
-//            rooms.add("Phòng mới " + (rooms.size() + 1));
-//            adapter.notifyItemInserted(rooms.size() - 1);
+            showAddRoomDialog();
         });
 
         return view;
     }
+    private void loadRooms() {
+        db = new DatabaseHelper(getContext());
+        db.loadRoom(new DatabaseHelper.RoomCallback() {
+            @Override
+            public void onRoomsLoaded(List<Room> rooms) {
+                RoomAdapter adapter = new RoomAdapter(rooms, roomName -> {
+                    RoomDetailFragment fragment = RoomDetailFragment.newInstance(roomName);
+                    getParentFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, fragment)
+                            .addToBackStack(null)
+                            .commit();
+                });
+                recyclerRooms.setAdapter(adapter);
+            }
+
+            @Override
+            public void onError(String message) {
+                Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showAddRoomDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Thêm Phòng Mới");
+
+        final EditText input = new EditText(getContext());
+        input.setHint("Nhập tên phòng");
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        builder.setPositiveButton("Lưu", (dialog, which) -> {
+            String roomName = input.getText().toString().trim();
+            if (!roomName.isEmpty()) {
+                executorService.execute(() -> {
+                    boolean success = DatabaseHelper.insertRoom(roomName);
+                    if (success) {
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            Toast.makeText(getContext(), "Thêm phòng thành công", Toast.LENGTH_SHORT).show();
+                            loadRooms(); // Load lại danh sách phòng sau khi thêm
+                        });
+                    } else {
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            Toast.makeText(getContext(), "Lỗi khi thêm phòng", Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                });
+            } else {
+                Toast.makeText(getContext(), "Tên phòng không được để trống", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("Hủy", (dialog, which) -> dialog.cancel());
+
+        builder.show();
+    }
+
 
 }
 

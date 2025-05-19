@@ -1,6 +1,8 @@
 package com.example.smarthomepvl;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -42,7 +44,7 @@ public class DatabaseHelper {
 
 
     public static boolean insertUser(String username, String password, String email, String phone) {
-        String query = "INSERT INTO accounts_smarthome (TaiKhoan, MatKhau, Email, SoDienThoai) VALUES (?, ?, ?, ?)";
+        String query = "INSERT INTO smarthome_accounts (TaiKhoan, MatKhau, Email, SoDienThoai) VALUES (?, ?, ?, ?)";
         try (Connection connection = connect();
              PreparedStatement ps = connection.prepareStatement(query)) {
 
@@ -65,7 +67,7 @@ public class DatabaseHelper {
 
     public void checkLogin(String username, String password, LoginCallback callback) {
         executorService.execute(() -> {
-            String query = "SELECT * FROM accounts_smarthome WHERE TaiKhoan = ? AND MatKhau = ?";
+            String query = "SELECT * FROM smarthome_accounts WHERE TaiKhoan = ? AND MatKhau = ?";
             try (Connection connection = connect();
                  PreparedStatement ps = connection.prepareStatement(query)) {
 
@@ -87,6 +89,59 @@ public class DatabaseHelper {
                 });
             }
         });
+    }
+    public interface RoomCallback {
+        void onRoomsLoaded(List<Room> rooms);
+        void onError(String message);
+    }
+
+    public void loadRoom(RoomCallback callback) {
+        executorService.execute(() -> {
+            String query = "SELECT TenPhong FROM smarthome_rooms";
+            List<Room> roomList = new ArrayList<>();
+
+            try (Connection conn = connect();
+                 PreparedStatement ps = conn.prepareStatement(query);
+                 ResultSet rs = ps.executeQuery()) {
+
+                while (rs.next()) {
+                    String name = rs.getString("TenPhong");
+                    int iconResId = getIconForRoom(name);
+                    roomList.add(new Room(name, iconResId, R.drawable.room_item_background));
+                }
+
+                new Handler(Looper.getMainLooper()).post(() -> callback.onRoomsLoaded(roomList));
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                new Handler(Looper.getMainLooper()).post(() -> callback.onError("Lỗi khi tải phòng"));
+            }
+        });
+    }
+
+    private int getIconForRoom(String name) {
+        name = name.toLowerCase();
+        if (name.contains("khách")) return R.drawable.ic_living_room;
+        if (name.contains("ngủ")) return R.drawable.ic_bedroom;
+        if (name.contains("bếp")) return R.drawable.ic_kitchen;
+        return R.drawable.ic_room;
+    }
+
+
+    public static boolean insertRoom(String TenPhong) {
+        String query = "INSERT INTO smarthome_rooms (TenPhong) VALUES (?)";
+        try (Connection connection = connect();
+             PreparedStatement ps = connection.prepareStatement(query)) {
+
+            ps.setString(1, TenPhong);
+
+            int rowsInserted = ps.executeUpdate();
+            return rowsInserted > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static boolean updateUser(String oldusername, String newusername, String password, String phone, String email) {
