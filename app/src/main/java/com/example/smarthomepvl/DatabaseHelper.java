@@ -143,6 +143,29 @@ public class DatabaseHelper {
             return false;
         }
     }
+    public void loadDeviceInRoom(RoomCallback callback) {
+        executorService.execute(() -> {
+            String query = "SELECT ID, DiaChiMAC, TenThietBi FROM smarthome_device WHERE IDPhong = ''";
+            List<Room> roomList = new ArrayList<>();
+
+            try (Connection conn = connect();
+                 PreparedStatement ps = conn.prepareStatement(query);
+                 ResultSet rs = ps.executeQuery()) {
+
+                while (rs.next()) {
+                    String name = rs.getString("TenPhong");
+                    int iconResId = getIconForRoom(name);
+                    roomList.add(new Room(name, iconResId, R.drawable.room_item_background));
+                }
+
+                new Handler(Looper.getMainLooper()).post(() -> callback.onRoomsLoaded(roomList));
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                new Handler(Looper.getMainLooper()).post(() -> callback.onError("Lỗi khi tải phòng"));
+            }
+        });
+    }
 
     public static boolean updateUser(String oldusername, String newusername, String password, String phone, String email) {
         String query = "INSERT INTO quanlykho_users (Username = ?, Password = ?, Phone = ?, Email = ? WHERE Username = ?)";
