@@ -14,6 +14,13 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        //
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+        }
+    }
+    sourceSets {
+        sourceSets["main"].jniLibs.srcDirs("libs")
     }
 
     buildTypes {
@@ -41,4 +48,15 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation(libs.mysql)
+    /* EZVIZ SDK core module, must rely on */
+    implementation ("io.github.ezviz-open:ezviz-sdk:5.13")
+    //After version 4.19.0, you need to rely on okhttp and gson libraries
+    implementation ("com.squareup.okhttp3:okhttp:3.12.1")
+    implementation ("com.google.code.gson:gson:2.8.5")
+
+    /* Video calls module, use if needed */
+    implementation ("io.github.ezviz-open:videotalk:1.3.0")
+
+    /* Code stream acquisition module, use if needed */
+    implementation ("io.github.ezviz-open:streamctrl:1.3.0")
 }

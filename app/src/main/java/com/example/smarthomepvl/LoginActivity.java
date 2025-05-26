@@ -1,54 +1,91 @@
 package com.example.smarthomepvl;
 
+import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
+import android.util.Log;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 
-public class LoginActivity extends AppCompatActivity {
-    EditText editTextUsername, editTextPassword;
-    Button btnLogin;
-    TextView txtRegister;
+import com.videogo.constant.Constant;
+import com.videogo.exception.BaseException;
+import com.videogo.openapi.EZGlobalSDK;
+import com.videogo.openapi.bean.EZAccessToken;
+import com.videogo.openapi.bean.EZAreaInfo;
 
+import java.util.List;
+import java.util.concurrent.Executors;
+
+public class LoginActivity extends AppCompatActivity {
+
+    // Thông tin camera
+//    private final String deviceSerial = "F69721360"; // Thay bằng mã thiết bị của bạn
+//    private final int cameraNo = 1; // Số camera
+//    private final String verifyCode = "Thuan2012"; // Mã xác minh 6 ký tự ở đáy camera
+
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        // Ánh xạ view
 
-        editTextUsername = findViewById(R.id.editAccount);
-        editTextPassword = findViewById(R.id.editPassword);
-        btnLogin = findViewById(R.id.btnLogin);
-        txtRegister = findViewById(R.id.txtRegister);
+        // Đăng nhập EZVIZ bằng openLoginPage
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                List<EZAreaInfo> areaList = EZGlobalSDK.getInstance().getAreaList();
+                if (areaList != null && !areaList.isEmpty()) {
+                    int areaCode = areaList.get(0).getId();
 
-        btnLogin.setOnClickListener(v -> {
-            String username = editTextUsername.getText().toString().trim();
-            String password = editTextPassword.getText().toString().trim();
-
-            if (username.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            DatabaseHelper db = new DatabaseHelper(LoginActivity.this);
-            db.checkLogin(username, password, success -> {
-                if (success) {
-                    // Đúng tài khoản, chuyển sang HomeActivity
-                    Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
-                    intent.putExtra("username", username); // nếu cần truyền username
-                    startActivity(intent);
-                    finish();
-                } else {
-                    Toast.makeText(LoginActivity.this, "Sai tài khoản hoặc mật khẩu", Toast.LENGTH_SHORT).show();
+                    runOnUiThread(() -> EZGlobalSDK.getInstance().openLoginPage(areaCode, 0));
                 }
-            });
+            } catch (BaseException e) {
+                e.printStackTrace();
+                runOnUiThread(() ->
+                        Toast.makeText(this, "Lỗi lấy khu vực: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
         });
 
-        txtRegister.setOnClickListener(v -> {
-            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
-            startActivity(intent);
-        });
+        // Đăng ký receiver nhận khi đăng nhập thành công
+        IntentFilter filter = new IntentFilter(Constant.OAUTH_SUCCESS_ACTION);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            registerReceiver(oauthSuccessReceiver, filter, Context.RECEIVER_EXPORTED);
+        } else {
+            registerReceiver(oauthSuccessReceiver, filter);
+        }
     }
+
+    private final BroadcastReceiver oauthSuccessReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Toast.makeText(context, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
+            Log.d("LoginActivity", "OAUTH_SUCCESS_ACTION - Lấy AccessToken và tạo player");
+
+            // Lấy access token tự động
+            EZAccessToken tokenObj = EZGlobalSDK.getInstance().getEZAccessToken();
+            if (tokenObj != null) {
+                String accessToken = tokenObj.getAccessToken();
+                Log.d("LoginActivity", "AccessToken: " + accessToken);
+                //EZGlobalSDK.getInstance().setAccessToken(accessToken); // Nếu SDK yêu cầu
+
+                SharedPreferences preferences = getSharedPreferences("ezviz", MODE_PRIVATE);
+                preferences.edit().putString("access_token", accessToken).apply();
+                //preferences.edit().putString("access_token", accessToken).commit();
+
+                //Chuyển form
+                Intent i = new Intent(LoginActivity.this, NaviActivity.class);
+                startActivity(i);
+                finish(); // Đóng login
+            } else {
+                Log.d("LoginActivity", "AccessToken object is null");
+            }
+        }
+    };
+
 }

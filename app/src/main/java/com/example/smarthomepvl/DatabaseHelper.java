@@ -150,7 +150,7 @@ public class DatabaseHelper {
     }
     public void loadDeviceInRoom(int idPhong, RoomDetailFragment.DeviceCallback callback) {
         executorService.execute(() -> {
-            String query = "SELECT ID, DiaChiMAC, TenThietBi FROM smarthome_device WHERE IDPhong = ?";
+            String query = "SELECT ID, DiaChiMAC, TenThietBi, LoaiThietBi FROM smarthome_device WHERE IDPhong = ?";
             List<Device> deviceList = new ArrayList<>();
 
             try (Connection conn = connect();
@@ -163,8 +163,9 @@ public class DatabaseHelper {
                     int id = rs.getInt("ID");
                     String mac = rs.getString("DiaChiMAC");
                     String ten = rs.getString("TenThietBi");
+                    int loai = rs.getInt("LoaiThietBi");
 
-                    deviceList.add(new Device(id, mac, ten));
+                    deviceList.add(new Device(id, mac, ten,loai));
                 }
 
                 new Handler(Looper.getMainLooper()).post(() -> callback.onDevicesLoaded(deviceList));

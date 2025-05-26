@@ -25,6 +25,8 @@
         android:id="@+id/recyclerRooms"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:spanCount="2"
         android:layout_below="@id/btnMicro"
         android:layout_marginTop="8dp"
         android:clipToPadding="false"

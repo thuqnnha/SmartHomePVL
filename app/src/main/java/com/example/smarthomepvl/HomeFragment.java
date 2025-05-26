@@ -27,6 +27,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -54,7 +55,8 @@ public class HomeFragment extends Fragment {
         recyclerRooms = view.findViewById(R.id.recyclerRooms);
         btnAddRoom = view.findViewById(R.id.btnAddRoom);
 
-        recyclerRooms.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerRooms.setLayoutManager(new GridLayoutManager(getContext(), 2));
+
 
         loadRooms();
 
@@ -193,9 +195,6 @@ public class HomeFragment extends Fragment {
             speechRecognizer.destroy();
         }
     }
-
-
-
 }
 
 

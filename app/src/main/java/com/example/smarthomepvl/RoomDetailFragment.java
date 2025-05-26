@@ -11,6 +11,8 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.smarthomepvl.Device;
 
@@ -23,8 +25,8 @@ public class RoomDetailFragment extends Fragment {
 
     private String roomName;
     private int roomId;
+    private RecyclerView recyclerDevices;
 
-    private LinearLayout deviceContainer;
 
     public static RoomDetailFragment newInstance(int id, String name) {
         RoomDetailFragment fragment = new RoomDetailFragment();
@@ -56,43 +58,39 @@ public class RoomDetailFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_room_detail, container, false);
 
-        TextView tvRoomName = view.findViewById(R.id.tvRoomName);
-        tvRoomName.setText(roomName);
+        recyclerDevices = view.findViewById(R.id.recyclerDevices);
+        recyclerDevices.setLayoutManager(new LinearLayoutManager(getContext())); // hoặc GridLayoutManager nếu bạn muốn
 
-        deviceContainer = view.findViewById(R.id.deviceContainer);
+        TextView tvRoomName = view.findViewById(R.id.txtRoomName);
+        tvRoomName.setText(roomName);
 
         DatabaseHelper db = new DatabaseHelper(requireContext());
 
         db.loadDeviceInRoom(roomId, new DeviceCallback() {
             @Override
             public void onDevicesLoaded(List<Device> deviceList) {
-                for (Device d : deviceList) {
-                    addDeviceView(d);
-                }
+                requireActivity().runOnUiThread(() -> {
+                    DeviceAdapter adapter = new DeviceAdapter(deviceList, new DeviceAdapter.DeviceListener() {
+                        @Override
+                        public void onDeviceSwitchChanged(Device device, boolean isOn) {
+                            // Xử lý bật tắt thiết bị ở đây
+                            Toast.makeText(getContext(), device.getTenThietBi() + ": " + (isOn ? "Bật" : "Tắt"), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    recyclerDevices.setAdapter(adapter);
+                });
             }
+
 
             @Override
             public void onError(String message) {
-                Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show()
+                );
             }
         });
 
         return view;
     }
 
-    private void addDeviceView(Device device) {
-        View deviceView = LayoutInflater.from(getContext()).inflate(R.layout.item_device, deviceContainer, false);
-
-        TextView tvDeviceName = deviceView.findViewById(R.id.tvDeviceName);
-        Switch switchDevice = deviceView.findViewById(R.id.switchDevice);
-
-        tvDeviceName.setText(device.getTenThietBi());
-
-        switchDevice.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Toast.makeText(getContext(), device.getTenThietBi() + ": " + (isChecked ? "Bật" : "Tắt"), Toast.LENGTH_SHORT).show();
-            // Bạn có thể thêm xử lý thật ở đây
-        });
-
-        deviceContainer.addView(deviceView);
-    }
 }
