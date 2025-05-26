@@ -65,6 +65,8 @@ public class NaviActivity extends AppCompatActivity {
                 selectedFragment = new HomeFragment();
             } else if (id == R.id.nav_profile) {
                 selectedFragment = new ProfileFragment();
+            }else if (id == R.id.nav_homee) {
+                selectedFragment = new HomeeFragment();
             }
 
             if (selectedFragment != null) {

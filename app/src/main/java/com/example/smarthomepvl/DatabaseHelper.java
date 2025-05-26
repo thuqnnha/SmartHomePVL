@@ -30,7 +30,6 @@ public class DatabaseHelper {
         this.context = context;
     }
 
-
     public void close() {
         executorService.shutdown();
     }

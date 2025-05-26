@@ -76,7 +76,6 @@ public class LoginActivity extends AppCompatActivity {
 
                 SharedPreferences preferences = getSharedPreferences("ezviz", MODE_PRIVATE);
                 preferences.edit().putString("access_token", accessToken).apply();
-                //preferences.edit().putString("access_token", accessToken).commit();
 
                 //Chuyển form
                 Intent i = new Intent(LoginActivity.this, NaviActivity.class);
