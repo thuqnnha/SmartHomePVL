@@ -3,13 +3,15 @@ package com.example.smarthomepvl;
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,6 +21,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -31,13 +34,16 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.videogo.openapi.EZConstants;
 import com.videogo.openapi.EZGlobalSDK;
 import com.videogo.openapi.EZPlayer;
-import com.videogo.openapi.bean.EZAccessToken;
+import com.videogo.openapi.bean.EZDeviceInfo;
 
 import android.Manifest;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class CameraFragment extends Fragment {
     //--------------------------------Khai báo biến------------------------------------
@@ -46,6 +52,8 @@ public class CameraFragment extends Fragment {
     private EZPlayer mEZPlayer;
     private FloatingActionButton fabCapture ;
     private ImageButton btnSleep, btnRecord, btnTalk, btnListen, btnUp, btnLeft, btnRight, btnDown;
+    private TextView tvStatus, tvDateTime;
+
     //--------------------------------Khai báo biến toàn cục------------------------------------
     private String deviceSerial = "F69721360";
     private int cameraNo = 1;
@@ -72,6 +80,7 @@ public class CameraFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        checkStatusCamera();
     }
 
     @Override
@@ -96,14 +105,15 @@ public class CameraFragment extends Fragment {
         btnRight = view.findViewById(R.id.btnRight);
         btnLeft = view.findViewById(R.id.btnLeft);
         btnDown = view.findViewById(R.id.btnDown);
+        tvStatus = view.findViewById(R.id.tvStatus);
+        tvDateTime = view.findViewById(R.id.tvDateTime);
 
         //-----------------------------------Cấp quyền-----------------------------------------
         requestPermission();
         //-------------------------------------------------------------------------------------
+        updateDateTime();
 
         mHolder = mSurfaceView.getHolder();
-
-
         mHolder.addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
@@ -277,7 +287,6 @@ public class CameraFragment extends Fragment {
             return true; // vẫn trả về true để xử lý PTZ
         });
 
-
         // TouchListener cho nút PHẢI
         btnRight.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
@@ -297,6 +306,55 @@ public class CameraFragment extends Fragment {
 
 
     }
+    private void updateDateTime() {
+        // Lấy thời gian hiện tại
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        String currentDateTime = sdf.format(new Date());
+
+        // Gán vào TextView
+        tvDateTime.setText(currentDateTime);
+    }
+
+    private void checkStatusCamera()
+    {
+        new Thread(() -> {
+            try {
+                EZDeviceInfo deviceInfo = EZGlobalSDK.getInstance().getDeviceInfo(deviceSerial);
+
+                if (deviceInfo != null) {
+                    int status = deviceInfo.getStatus(); // 0: Offline, 1: Online
+                    String statusText;
+                    int color;
+
+                    if (status == 1) {
+                        statusText = "● Online";
+                        color = Color.parseColor("#22c55e"); // Màu xanh lá
+                    } else {
+                        statusText = "● Offline";
+                        color = Color.parseColor("#ef4444"); // Màu đỏ
+                    }
+
+                    requireActivity().runOnUiThread(() -> {
+                        tvStatus.setText(statusText);
+                        tvStatus.setTextColor(color);
+                    });
+                } else {
+                    requireActivity().runOnUiThread(() -> {
+                        tvStatus.setText("● Unknown");
+                        tvStatus.setTextColor(Color.GRAY);
+                    });
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                requireActivity().runOnUiThread(() -> {
+                    tvStatus.setText("● Lỗi");
+                    tvStatus.setTextColor(Color.DKGRAY);
+                });
+            }
+        }).start();
+
+    }
+
     // Xử lý chung cho PTZ
     private void handlePtzMovement(MotionEvent event, EZConstants.EZPTZCommand command) {
         switch (event.getAction()) {
