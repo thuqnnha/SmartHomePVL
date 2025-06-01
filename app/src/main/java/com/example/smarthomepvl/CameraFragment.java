@@ -1,14 +1,11 @@
 package com.example.smarthomepvl;
 
-import android.content.BroadcastReceiver;
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,12 +13,11 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
@@ -32,14 +28,14 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.videogo.constant.Constant;
+import com.videogo.openapi.EZConstants;
 import com.videogo.openapi.EZGlobalSDK;
 import com.videogo.openapi.EZPlayer;
 import com.videogo.openapi.bean.EZAccessToken;
+
 import android.Manifest;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -49,11 +45,13 @@ public class CameraFragment extends Fragment {
     private SurfaceHolder mHolder;
     private EZPlayer mEZPlayer;
     private FloatingActionButton fabCapture ;
-    private ImageButton btnSleep,btnRecord,btnTalk,btnListen;
+    private ImageButton btnSleep, btnRecord, btnTalk, btnListen, btnUp, btnLeft, btnRight, btnDown;
     //--------------------------------Khai báo biến toàn cục------------------------------------
     private String deviceSerial = "F69721360";
     private int cameraNo = 1;
     private String verifyCode = "RVNRNT";
+
+    private int ptzSpeed = 2;
     private String recordFilePath;
     //--------------------------------Khai báo biến cờ------------------------------------
     private boolean isSurfaceCreated = false;
@@ -82,6 +80,7 @@ public class CameraFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_camera, container, false);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -93,6 +92,10 @@ public class CameraFragment extends Fragment {
         btnRecord = view.findViewById(R.id.btnRecord);
         btnTalk = view.findViewById(R.id.btnTalk);
         btnListen = view.findViewById(R.id.btnListen);
+        btnUp = view.findViewById(R.id.btnUp);
+        btnRight = view.findViewById(R.id.btnRight);
+        btnLeft = view.findViewById(R.id.btnLeft);
+        btnDown = view.findViewById(R.id.btnDown);
 
         //-----------------------------------Cấp quyền-----------------------------------------
         requestPermission();
@@ -100,14 +103,6 @@ public class CameraFragment extends Fragment {
 
         mHolder = mSurfaceView.getHolder();
 
-//        EZAccessToken tokenObj = EZGlobalSDK.getInstance().getEZAccessToken();
-//        if (tokenObj != null) {
-//            String accessToken = tokenObj.getAccessToken();
-//            Log.d("HomeFragment", "AccessToken: " + accessToken);
-//            EZGlobalSDK.getInstance().setAccessToken(accessToken);
-//        } else {
-//            Log.d("HomeFragment", "AccessToken object is null");
-//        }
 
         mHolder.addCallback(new SurfaceHolder.Callback() {
             @Override
@@ -231,8 +226,116 @@ public class CameraFragment extends Fragment {
             }
         });
 
+        // TouchListener cho nút LÊN
+        btnUp.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    v.setPressed(true); // Kích hoạt hiệu ứng nhấn
+                    handlePtzMovement(event, EZConstants.EZPTZCommand.EZPTZCommandUp);
+                    break;
+
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    v.setPressed(false); // Trả lại trạng thái
+                    handlePtzMovement(event, EZConstants.EZPTZCommand.EZPTZCommandUp);
+                    break;
+            }
+            return true; // vẫn trả về true để xử lý PTZ
+        });
+
+        // TouchListener cho nút XUỐNG
+        btnDown.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    v.setPressed(true); // Kích hoạt hiệu ứng nhấn
+                    handlePtzMovement(event, EZConstants.EZPTZCommand.EZPTZCommandDown);
+                    break;
+
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    v.setPressed(false); // Trả lại trạng thái
+                    handlePtzMovement(event, EZConstants.EZPTZCommand.EZPTZCommandDown);
+                    break;
+            }
+            return true; // vẫn trả về true để xử lý PTZ
+        });
+
+        // TouchListener cho nút TRÁI
+        btnLeft.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    v.setPressed(true); // Kích hoạt hiệu ứng nhấn
+                    handlePtzMovement(event, EZConstants.EZPTZCommand.EZPTZCommandLeft);
+                    break;
+
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    v.setPressed(false); // Trả lại trạng thái
+                    handlePtzMovement(event, EZConstants.EZPTZCommand.EZPTZCommandLeft);
+                    break;
+            }
+            return true; // vẫn trả về true để xử lý PTZ
+        });
+
+
+        // TouchListener cho nút PHẢI
+        btnRight.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    v.setPressed(true); // Kích hoạt hiệu ứng nhấn
+                    handlePtzMovement(event, EZConstants.EZPTZCommand.EZPTZCommandRight);
+                    break;
+
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    v.setPressed(false); // Trả lại trạng thái
+                    handlePtzMovement(event, EZConstants.EZPTZCommand.EZPTZCommandRight);
+                    break;
+            }
+            return true; // vẫn trả về true để xử lý PTZ
+        });
+
 
     }
+    // Xử lý chung cho PTZ
+    private void handlePtzMovement(MotionEvent event, EZConstants.EZPTZCommand command) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                // Bắt đầu di chuyển khi nhấn nút
+                controlPTZ(command, EZConstants.EZPTZAction.EZPTZActionSTART);
+                break;
+
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                // Dừng di chuyển khi thả nút
+                controlPTZ(command, EZConstants.EZPTZAction.EZPTZActionSTOP);
+                break;
+        }
+    }
+
+    // Hàm điều khiển PTZ (sửa lại cho chạy trong Thread)
+    private void controlPTZ(EZConstants.EZPTZCommand command, EZConstants.EZPTZAction action) {
+        new Thread(() -> {
+            try {
+                boolean result = EZGlobalSDK.getInstance().controlPTZ(
+                        deviceSerial,
+                        1,
+                        command,
+                        action,
+                        ptzSpeed
+                );
+
+                Log.d("PTZ_CONTROL", "Command: " + command + " | Action: " + action + " | Speed: " + ptzSpeed + " | Result: " + result);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireContext(), "Lỗi điều khiển: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
+            }
+        }).start();
+    }
+
     private void saveBitmapToGallery(Bitmap bitmap) {
         ContentValues values = new ContentValues();
         String fileName = "SCREENSHOT_" + System.currentTimeMillis() + ".jpg";
@@ -327,17 +430,15 @@ public class CameraFragment extends Fragment {
     private void requestPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermissions(new String[]{Manifest.permission.READ_MEDIA_IMAGES}, 100);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        } else {
             requestPermissions(new String[]{
                     Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     Manifest.permission.READ_EXTERNAL_STORAGE
             }, 100);
         }
         //
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (requireContext().checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1001);
-            }
+        if (requireContext().checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1001);
         }
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
