@@ -27,6 +27,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
@@ -43,19 +44,24 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public class CameraFragment extends Fragment {
-
+    //--------------------------------Khai báo biến------------------------------------
     private SurfaceView mSurfaceView;
     private SurfaceHolder mHolder;
     private EZPlayer mEZPlayer;
     private FloatingActionButton fabCapture ;
-    private ImageButton btnSleep,btnRecord,btnTalk;
-
+    private ImageButton btnSleep,btnRecord,btnTalk,btnListen;
+    //--------------------------------Khai báo biến toàn cục------------------------------------
     private String deviceSerial = "F69721360";
     private int cameraNo = 1;
     private String verifyCode = "RVNRNT";
+    private String recordFilePath;
+    //--------------------------------Khai báo biến cờ------------------------------------
     private boolean isSurfaceCreated = false;
     private boolean isRecording = false;
-    private String recordFilePath;
+    private boolean isSoundOn = false;
+    private boolean isTalking = false;
+    private boolean isSleep = false;
+    //-------------------------------------------------------------------------------------
 
     public CameraFragment() {
         // Required empty public constructor
@@ -86,7 +92,7 @@ public class CameraFragment extends Fragment {
         btnSleep = view.findViewById(R.id.btnSleep);
         btnRecord = view.findViewById(R.id.btnRecord);
         btnTalk = view.findViewById(R.id.btnTalk);
-        //-------------------------------------------------------------------------------------
+        btnListen = view.findViewById(R.id.btnListen);
 
         //-----------------------------------Cấp quyền-----------------------------------------
         requestPermission();
@@ -148,6 +154,7 @@ public class CameraFragment extends Fragment {
         btnRecord.setOnClickListener(v -> {
             if (!isRecording) {
                 // Tạo thư mục lưu file video
+                btnRecord.setImageResource(R.drawable.ic_videocam);
                 String folderPath = Environment.getExternalStorageDirectory().getPath() + "/EzvizVideos";
                 File folder = new File(folderPath);
                 if (!folder.exists()) {
@@ -166,9 +173,64 @@ public class CameraFragment extends Fragment {
             } else {
                 mEZPlayer.stopLocalRecord();
                 isRecording = false;
+                btnRecord.setImageResource(R.drawable.ic_videocam_off);
                 Toast.makeText(requireContext(), "Video đã lưu tại:\n" + recordFilePath, Toast.LENGTH_LONG).show();
             }
         });
+
+        btnListen.setOnClickListener(v -> {
+            try {
+                if (!isSoundOn) {
+                    mEZPlayer.openSound();
+                    isSoundOn = true;
+                    btnListen.setImageResource(R.drawable.ic_talk_on);
+                    Toast.makeText(requireContext(), "Âm thanh đã bật", Toast.LENGTH_SHORT).show();
+                } else {
+                    mEZPlayer.closeSound();
+                    isSoundOn = false;
+                    btnListen.setImageResource(R.drawable.ic_talk_off);
+                    Toast.makeText(requireContext(), "Âm thanh đã tắt", Toast.LENGTH_SHORT).show();
+                }
+            } catch (Exception e) {
+                e.printStackTrace(); // Ghi log khi debug
+                Toast.makeText(requireContext(), "Lỗi xử lý âm thanh: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+
+        btnTalk.setOnClickListener(v -> {
+            if (!isTalking) {
+                if (mEZPlayer.startVoiceTalk()) {
+                    mEZPlayer.setVoiceTalkStatus(false);  // Bật mic: nói cho thiết bị nghe
+                    isTalking = true;
+                    btnTalk.setImageResource(R.drawable.ic_talk_on);
+                } else {
+                    Toast.makeText(requireContext(), "Không thể bắt đầu voice talk", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                mEZPlayer.stopVoiceTalk();
+                isTalking = false;
+                btnTalk.setImageResource(R.drawable.ic_talk_off);
+            }
+        });
+
+        btnSleep.setOnClickListener(v -> {
+            if(!isSleep)
+            {
+                // Tạm dừng hoặc tắt stream camera
+                mEZPlayer.stopPlayback();
+                // Tắt âm thanh
+                mEZPlayer.closeSound();
+                isSleep = true;
+                Toast.makeText(requireContext(), "Đã bật chế độ ngủ", Toast.LENGTH_SHORT).show();
+            }
+            else
+            {
+                playLiveView();
+                isSleep = false;
+                Toast.makeText(requireContext(), "Bật camera", Toast.LENGTH_SHORT).show();
+            }
+        });
+
 
     }
     private void saveBitmapToGallery(Bitmap bitmap) {
@@ -277,6 +339,13 @@ public class CameraFragment extends Fragment {
                 requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1001);
             }
         }
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(requireActivity(),
+                    new String[]{Manifest.permission.RECORD_AUDIO},
+                    1);
+        }
+
     }
 
 }

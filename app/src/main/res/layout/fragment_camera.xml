@@ -178,7 +178,7 @@
                 android:id="@+id/btnRecord"
                 android:layout_width="72dp"
                 android:layout_height="72dp"
-                android:src="@drawable/ic_videocam"
+                android:src="@drawable/ic_videocam_off"
                 android:background="@drawable/btn_record_selector"
                 android:contentDescription="Ghi video"
                 app:tint="#FFFFFF" />
@@ -188,7 +188,7 @@
                 android:id="@+id/btnTalk"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:src="@drawable/ic_mic_on"
+                android:src="@drawable/ic_mic_off"
                 android:background="@drawable/btn_primary_selector"
                 android:contentDescription="Đàm thoại"
                 android:layout_marginStart="32dp"
@@ -203,11 +203,24 @@
         android:layout_height="52dp"
         android:layout_above="@id/bottomControlPanel"
         android:layout_alignParentEnd="true"
-        android:layout_margin="16dp"
+        android:layout_margin="10dp"
         android:src="@drawable/ic_setting"
         android:background="@drawable/btn_light_selector"
         android:contentDescription="Cài đặt"
         app:tint="#4A5568" />
+    <!-- Nút nghe âm thanh từ camera -->
+    <ImageButton
+        android:id="@+id/btnListen"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_above="@id/bottomControlPanel"
+        android:layout_toStartOf="@id/btnSettings"
+        android:layout_margin="10dp"
+        android:src="@drawable/ic_talk_off"
+        android:background="@drawable/btn_light_selector"
+        android:contentDescription="Nghe âm thanh"
+        app:tint="#4A5568" />
+
 
     <!-- Floating Action Button cho chụp nhanh -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
