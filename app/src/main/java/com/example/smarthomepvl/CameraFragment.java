@@ -51,7 +51,7 @@ public class CameraFragment extends Fragment {
     private SurfaceHolder mHolder;
     private EZPlayer mEZPlayer;
     private FloatingActionButton fabCapture ;
-    private ImageButton btnSleep, btnRecord, btnTalk, btnListen, btnUp, btnLeft, btnRight, btnDown;
+    private ImageButton btnSleep, btnRecord, btnTalk, btnListen, btnUp, btnLeft, btnRight, btnDown, btnFlip;
     private TextView tvStatus, tvDateTime;
 
     //--------------------------------Khai báo biến toàn cục------------------------------------
@@ -107,6 +107,7 @@ public class CameraFragment extends Fragment {
         btnDown = view.findViewById(R.id.btnDown);
         tvStatus = view.findViewById(R.id.tvStatus);
         tvDateTime = view.findViewById(R.id.tvDateTime);
+        btnFlip = view.findViewById(R.id.btnFlip);
 
         //-----------------------------------Cấp quyền-----------------------------------------
         requestPermission();
@@ -303,6 +304,21 @@ public class CameraFragment extends Fragment {
             }
             return true; // vẫn trả về true để xử lý PTZ
         });
+
+        btnFlip.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                try {
+                    EZGlobalSDK.getInstance().controlVideoFlip(deviceSerial, cameraNo, EZConstants.EZPTZDisplayCommand.EZPTZDisplayCommandFlip);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    // Có thể hiển thị Toast hoặc log lỗi để biết
+                    Toast.makeText(v.getContext(), "Lỗi khi lật hình ảnh: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+                return true; // Đã xử lý sự kiện
+            }
+            return false; // Không xử lý các action khác
+        });
+
 
 
     }

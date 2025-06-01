@@ -195,6 +195,18 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!-- Nút lật ảnh (flip) ở góc dưới bên trái -->
+    <ImageButton
+        android:id="@+id/btnFlip"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_above="@id/bottomControlPanel"
+        android:layout_alignParentStart="true"
+        android:layout_margin="10dp"
+        android:src="@drawable/ic_flip"
+        android:background="@drawable/btn_light_selector"
+        android:contentDescription="Lật ảnh"
+        app:tint="#4A5568" />
     <!-- Nút phụ trợ góc dưới phải -->
     <ImageButton
         android:id="@+id/btnSettings"
