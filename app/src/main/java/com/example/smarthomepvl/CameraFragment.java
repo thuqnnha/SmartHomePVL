@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
@@ -148,11 +147,17 @@ public class CameraFragment extends Fragment {
         //quay màn hình
         btnRecord.setOnClickListener(v -> {
             if (!isRecording) {
-                String fileName = "record_" + System.currentTimeMillis() + ".mp4";
-                Uri videoUri = insertVideoToMediaStore(fileName);
-                String realPath = getRealPathFromUri(videoUri);
+                // Tạo thư mục lưu file video
+                String folderPath = Environment.getExternalStorageDirectory().getPath() + "/EzvizVideos";
+                File folder = new File(folderPath);
+                if (!folder.exists()) {
+                    folder.mkdirs();
+                }
 
-                if (realPath != null && mEZPlayer.startLocalRecordWithFile(realPath)) {
+                recordFilePath = folderPath + "/record_" + System.currentTimeMillis() + ".mp4";
+
+                boolean result = mEZPlayer.startLocalRecordWithFile(recordFilePath);
+                if (result) {
                     isRecording = true;
                     Toast.makeText(requireContext(), "Đang quay video...", Toast.LENGTH_SHORT).show();
                 } else {
@@ -161,33 +166,11 @@ public class CameraFragment extends Fragment {
             } else {
                 mEZPlayer.stopLocalRecord();
                 isRecording = false;
-                Toast.makeText(requireContext(), "Video đã lưu trong thư viện", Toast.LENGTH_LONG).show();
+                Toast.makeText(requireContext(), "Video đã lưu tại:\n" + recordFilePath, Toast.LENGTH_LONG).show();
             }
         });
 
-
     }
-    private Uri insertVideoToMediaStore(String fileName) {
-        ContentValues values = new ContentValues();
-        values.put(MediaStore.Video.Media.DISPLAY_NAME, fileName); // Tên file
-        values.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
-        values.put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/EZVIZ");
-
-        ContentResolver resolver = requireContext().getContentResolver();
-        Uri videoUri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
-        return videoUri;
-    }
-    private String getRealPathFromUri(Uri uri) {
-        String filePath = null;
-        try (Cursor cursor = requireContext().getContentResolver().query(uri,
-                new String[]{MediaStore.Video.Media.DATA}, null, null, null)) {
-            if (cursor != null && cursor.moveToFirst()) {
-                filePath = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA));
-            }
-        }
-        return filePath;
-    }
-
     private void saveBitmapToGallery(Bitmap bitmap) {
         ContentValues values = new ContentValues();
         String fileName = "SCREENSHOT_" + System.currentTimeMillis() + ".jpg";
