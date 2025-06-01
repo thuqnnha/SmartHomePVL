@@ -70,12 +70,12 @@ public class LoginActivity extends AppCompatActivity {
             // Lấy access token tự động
             EZAccessToken tokenObj = EZGlobalSDK.getInstance().getEZAccessToken();
             if (tokenObj != null) {
-                String accessToken = tokenObj.getAccessToken();
-                Log.d("LoginActivity", "AccessToken: " + accessToken);
-                //EZGlobalSDK.getInstance().setAccessToken(accessToken); // Nếu SDK yêu cầu
-
-                SharedPreferences preferences = getSharedPreferences("ezviz", MODE_PRIVATE);
-                preferences.edit().putString("access_token", accessToken).apply();
+//                String accessToken = tokenObj.getAccessToken();
+//                Log.d("LoginActivity", "AccessToken: " + accessToken);
+//                //EZGlobalSDK.getInstance().setAccessToken(accessToken); // Nếu SDK yêu cầu
+//
+//                SharedPreferences preferences = getSharedPreferences("ezviz", MODE_PRIVATE);
+//                preferences.edit().putString("access_token", accessToken).apply();
 
                 //Chuyển form
                 Intent i = new Intent(LoginActivity.this, NaviActivity.class);
