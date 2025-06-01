@@ -1,7 +1,11 @@
 package com.example.smarthomepvl;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -11,14 +15,18 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.videogo.constant.Constant;
 import com.videogo.openapi.EZGlobalSDK;
 import com.videogo.openapi.EZPlayer;
 import com.videogo.openapi.bean.EZAccessToken;
@@ -44,6 +52,24 @@ public class RoomDetailFragment extends Fragment {
     private String deviceSerial = "F69721360";
     private int cameraNo = 1;
     private String verifyCode = "Thuan2012";
+    private Button btnPlay, btnStop;
+
+    private final BroadcastReceiver oauthSuccessReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Toast.makeText(context, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
+            Log.d("HomeFragment", "OAUTH_SUCCESS_ACTION - Lấy AccessToken và tạo player");
+
+            EZAccessToken tokenObj = EZGlobalSDK.getInstance().getEZAccessToken();
+            if (tokenObj != null) {
+                String accessToken = tokenObj.getAccessToken();
+                Log.d("HomeFragment", "AccessToken: " + accessToken);
+                EZGlobalSDK.getInstance().setAccessToken(accessToken);
+            } else {
+                Log.d("HomeFragment", "AccessToken object is null");
+            }
+        }
+    };
 
     public RoomDetailFragment() {}
     public interface DeviceCallback {
@@ -63,6 +89,15 @@ public class RoomDetailFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Đăng ký receiver
+        IntentFilter filter = new IntentFilter(Constant.OAUTH_SUCCESS_ACTION);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            requireContext().registerReceiver(oauthSuccessReceiver, filter, Context.RECEIVER_EXPORTED);
+        } else {
+            ContextCompat.registerReceiver(requireContext(), oauthSuccessReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
+        }
+
         if (getArguments() != null) {
             roomName = getArguments().getString(ARG_ROOM_NAME);
             roomId = getArguments().getInt(ARG_ROOM_ID);
@@ -74,18 +109,6 @@ public class RoomDetailFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_room_detail, container, false);
-//        //---------------------------------------------------------------------------------
-//        SharedPreferences preferences = requireContext().getSharedPreferences("ezviz", Context.MODE_PRIVATE);
-//        String accessToken = preferences.getString("access_token", null);
-//
-//        if (accessToken != null) {
-//            Toast.makeText(getContext(), "AccessToken: "+ accessToken, Toast.LENGTH_SHORT).show();
-//            EZGlobalSDK.getInstance().setAccessToken(accessToken);
-//        } else {
-//            Toast.makeText(getContext(), "Không có AccessToken", Toast.LENGTH_SHORT).show();
-//        }
-//
-//        //---------------------------------------------------------------------------------
 
         recyclerDevices = view.findViewById(R.id.recyclerDevices);
         recyclerDevices.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -93,11 +116,28 @@ public class RoomDetailFragment extends Fragment {
         TextView tvRoomName = view.findViewById(R.id.txtRoomName);
         tvRoomName.setText(roomName);
 
-        mSurfaceView = view.findViewById(R.id.surfaceViewCamera);
-        mHolder = mSurfaceView.getHolder();
+        loadDevicesAndCamera();
 
-        // Đăng ký callback cho SurfaceView
+        return view;
+    }
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        mSurfaceView = view.findViewById(R.id.surfaceViewCamera);
+        btnPlay = view.findViewById(R.id.btnPlay);
+
+        EZAccessToken tokenObj = EZGlobalSDK.getInstance().getEZAccessToken();
+        if (tokenObj != null) {
+            String accessToken = tokenObj.getAccessToken();
+            //Log.d("HomeFragment", "AccessToken: " + accessToken);
+            EZGlobalSDK.getInstance().setAccessToken(accessToken);
+        } else {
+            //Log.d("HomeFragment", "AccessToken object is null");
+        }
+
+        mHolder = mSurfaceView.getHolder();
         mHolder.addCallback(new SurfaceHolder.Callback() {
+
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 isSurfaceCreated = true;
@@ -121,9 +161,45 @@ public class RoomDetailFragment extends Fragment {
             }
         });
 
-        loadDevicesAndCamera();
+        // Nút Play
+        btnPlay.setOnClickListener(v -> {
+            playLiveView();
+            Toast.makeText(requireContext(), "Đang phát camera", Toast.LENGTH_SHORT).show();
+        });
+    }
+    private void playLiveView() {
+        if (mEZPlayer != null) {
+            mEZPlayer.stopRealPlay();
+            mEZPlayer.release();
+            mEZPlayer = null;
+        }
 
-        return view;
+        mEZPlayer = EZGlobalSDK.getInstance().createPlayer(deviceSerial, cameraNo);
+
+        if (mEZPlayer == null) {
+            requireActivity().runOnUiThread(() ->
+                    Toast.makeText(requireContext(), "Không tạo được player", Toast.LENGTH_SHORT).show());
+            return;
+        }
+
+        mEZPlayer.setPlayVerifyCode(verifyCode);
+
+        if (isSurfaceCreated) {
+            mEZPlayer.setSurfaceHold(mHolder);
+            mEZPlayer.startRealPlay();
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mEZPlayer != null) {
+            mEZPlayer.stopRealPlay();
+            mEZPlayer.release();
+            mEZPlayer = null;
+        }
+
+        requireContext().unregisterReceiver(oauthSuccessReceiver);
     }
 
     private void loadDevicesAndCamera() {
@@ -137,16 +213,6 @@ public class RoomDetailFragment extends Fragment {
                         Toast.makeText(getContext(), device.getTenThietBi() + ": " + (isOn ? "Bật" : "Tắt"), Toast.LENGTH_SHORT).show();
                     });
                     recyclerDevices.setAdapter(adapter);
-
-                    // Sau khi load xong thiết bị, bắt đầu luồng phát camera
-                    new Thread(() -> {
-                        try {
-                            Thread.sleep(1000);
-                            requireActivity().runOnUiThread(() -> playLiveView());
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }).start();
                 });
             }
 
@@ -157,54 +223,5 @@ public class RoomDetailFragment extends Fragment {
                 );
             }
         });
-    }
-
-    private void playLiveView() {
-        if (mEZPlayer != null) {
-            mEZPlayer.stopRealPlay();
-            mEZPlayer.release();
-            mEZPlayer = null;
-        }
-
-        //---------------------------------------------------------------------------------
-        SharedPreferences preferences = requireContext().getSharedPreferences("ezviz", Context.MODE_PRIVATE);
-        String accessToken = preferences.getString("access_token", null);
-
-        if (accessToken != null) {
-            Toast.makeText(getContext(), "AccessToken: "+ accessToken, Toast.LENGTH_SHORT).show();
-            EZGlobalSDK.getInstance().setAccessToken(accessToken);
-        } else {
-            Toast.makeText(getContext(), "Không có AccessToken", Toast.LENGTH_SHORT).show();
-        }
-
-        //---------------------------------------------------------------------------------
-
-        mEZPlayer = EZGlobalSDK.getInstance().createPlayer(deviceSerial, cameraNo);
-
-        if (mEZPlayer == null) {
-            requireActivity().runOnUiThread(() ->
-                    Toast.makeText(requireContext(), "Không tạo được player", Toast.LENGTH_SHORT).show()
-            );
-            return;
-        }
-
-        mEZPlayer.setPlayVerifyCode(verifyCode);
-
-        if (isSurfaceCreated) {
-            mEZPlayer.setSurfaceHold(mHolder);
-            mEZPlayer.startRealPlay();
-        }
-    }
-
-
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        if (mEZPlayer != null) {
-            mEZPlayer.stopRealPlay();
-            mEZPlayer.release();
-            mEZPlayer = null;
-        }
     }
 }

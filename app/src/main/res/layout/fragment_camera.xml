@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mainLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F7FA"
+    tools:context=".CameraFragment">
+
+    <!-- Khung hình camera tỉ lệ 4:3 (hình chữ nhật) -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_above="@+id/bottomControlPanel"
+        android:layout_below="@+id/topBar"
+        android:padding="8dp">
+
+        <SurfaceView
+            android:id="@+id/surfaceView"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:layout_gravity="center"
+            android:layout_weight="3"
+            android:layout_marginBottom="50dp"/>
+
+        <!-- Overlay hướng dẫn tỉ lệ -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:layout_weight="4"
+            android:background="@android:color/transparent"
+            android:visibility="invisible"/>
+    </FrameLayout>
+
+    <!-- Thanh điều khiển trên cùng -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="#FFFFFF"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
+        android:orientation="horizontal"
+        android:elevation="4dp">
+
+        <!-- ComboBox chọn camera -->
+        <Spinner
+            android:id="@+id/spinnerCameraList"
+            android:layout_width="0dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:background="@drawable/spinner_background"
+            android:popupBackground="#FFFFFF"
+            android:spinnerMode="dropdown"
+            android:paddingStart="12dp"
+            android:paddingEnd="32dp"
+            android:textSize="14sp"
+            android:popupElevation="8dp"
+            android:layout_gravity="center_vertical"
+            />
+
+        <!-- Container cho thời gian và trạng thái -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="end"
+            android:layout_marginStart="16dp">
+
+            <TextView
+                android:id="@+id/tvDateTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="01/06/2025 14:30"
+                android:textColor="#718096"
+                android:textSize="12sp"
+                android:gravity="end"/>
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="● Online"
+                android:textColor="#48BB78"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:gravity="end"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Panel điều khiển dưới cùng -->
+    <LinearLayout
+        android:id="@+id/bottomControlPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="#FFFFFF"
+        android:padding="24dp"
+        android:orientation="vertical"
+        android:elevation="8dp">
+
+        <!-- Hàng 1: Điều hướng PTZ -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:gravity="center">
+
+            <!-- Nút điều hướng -->
+            <ImageButton
+                android:id="@+id/btnUp"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/ic_arrow_up"
+                android:background="@drawable/btn_light_selector"
+                android:contentDescription="Lên"
+                app:tint="#4A5568" />
+
+            <ImageButton
+                android:id="@+id/btnLeft"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_centerVertical="true"
+                android:layout_toLeftOf="@id/btnUp"
+                android:src="@drawable/ic_arrow_left"
+                android:background="@drawable/btn_light_selector"
+                android:contentDescription="Trái"
+                app:tint="#4A5568" />
+
+            <ImageButton
+                android:id="@+id/btnRight"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_centerVertical="true"
+                android:layout_toRightOf="@id/btnUp"
+                android:src="@drawable/ic_arrow_right"
+                android:background="@drawable/btn_light_selector"
+                android:contentDescription="Phải"
+                app:tint="#4A5568" />
+
+            <ImageButton
+                android:id="@+id/btnDown"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_below="@id/btnUp"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/ic_arrow_down"
+                android:background="@drawable/btn_light_selector"
+                android:contentDescription="Xuống"
+                app:tint="#4A5568" />
+        </RelativeLayout>
+
+        <!-- Hàng 2: Chức năng chính -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <!-- Nút chế độ ngủ -->
+            <ImageButton
+                android:id="@+id/btnSleep"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_sleep_mode"
+                android:background="@drawable/btn_primary_selector"
+                android:contentDescription="Chế độ ngủ"
+                android:layout_marginEnd="32dp"
+                app:tint="#FFFFFF" />
+
+            <!-- Nút ghi video -->
+            <ImageButton
+                android:id="@+id/btnRecord"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:src="@drawable/ic_videocam"
+                android:background="@drawable/btn_record_selector"
+                android:contentDescription="Ghi video"
+                app:tint="#FFFFFF" />
+
+            <!-- Nút đàm thoại -->
+            <ImageButton
+                android:id="@+id/btnTalk"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_mic_on"
+                android:background="@drawable/btn_primary_selector"
+                android:contentDescription="Đàm thoại"
+                android:layout_marginStart="32dp"
+                app:tint="#FFFFFF" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Nút phụ trợ góc dưới phải -->
+    <ImageButton
+        android:id="@+id/btnSettings"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_above="@id/bottomControlPanel"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_setting"
+        android:background="@drawable/btn_light_selector"
+        android:contentDescription="Cài đặt"
+        app:tint="#4A5568" />
+
+    <!-- Floating Action Button cho chụp nhanh -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabCapture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/bottomControlPanel"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="24dp"
+        android:src="@drawable/ic_camera"
+        app:backgroundTint="#4299E1"
+        app:tint="#FFFFFF"
+        app:elevation="6dp"
+        app:rippleColor="#3182CE"/>
+
+</RelativeLayout>

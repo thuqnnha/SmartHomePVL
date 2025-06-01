@@ -8,7 +8,7 @@
         android:title="Tôi"
         android:icon="@drawable/ic_person" />
     <item
-        android:id="@+id/nav_homee"
-        android:title="Tôi"
+        android:id="@+id/nav_camera"
+        android:title="Camera"
         android:icon="@drawable/ic_person" />
 </menu>
