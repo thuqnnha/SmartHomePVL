@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="24dp"
+    android:orientation="vertical">
+
+    <!-- Tên thiết bị -->
+    <EditText
+        android:id="@+id/edtDeviceName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Tên thiết bị"
+        android:inputType="textPersonName"
+        android:paddingVertical="8dp" />
+
+    <!-- Mã thiết bị -->
+    <EditText
+        android:id="@+id/edtDeviceCode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Mã thiết bị (Ví dụ: F69721360)"
+        android:inputType="textNoSuggestions"
+        android:paddingVertical="8dp" />
+
+    <!-- Số camera -->
+    <EditText
+        android:id="@+id/edtCameraNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Số camera (Ví dụ: 1)"
+        android:inputType="number"
+        android:paddingVertical="8dp" />
+
+    <!-- Mã xác nhận -->
+    <EditText
+        android:id="@+id/edtVerificationCode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Mã xác nhận (Ví dụ: RVNRNT)"
+        android:inputType="textNoSuggestions"
+        android:paddingVertical="8dp" />
+
+</LinearLayout>

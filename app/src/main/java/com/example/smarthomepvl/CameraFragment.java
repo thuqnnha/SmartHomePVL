@@ -1,6 +1,7 @@
 package com.example.smarthomepvl;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.pm.PackageManager;
@@ -22,6 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -44,11 +46,14 @@ import android.Manifest;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.IDN;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class CameraFragment extends Fragment {
     //--------------------------------Khai báo biến------------------------------------
@@ -56,7 +61,7 @@ public class CameraFragment extends Fragment {
     private SurfaceHolder mHolder;
     private EZPlayer mEZPlayer;
     private FloatingActionButton fabCapture ;
-    private ImageButton btnSleep, btnRecord, btnTalk, btnListen, btnUp, btnLeft, btnRight, btnDown, btnFlip;
+    private ImageButton btnSleep, btnRecord, btnTalk, btnListen, btnUp, btnLeft, btnRight, btnDown, btnFlip,btnAdd,btnEdit,btnDelete;
     private TextView tvStatus, tvDateTime;
     private Spinner spinnerCamera;
     private ArrayAdapter<String> cameraAdapter;
@@ -64,11 +69,14 @@ public class CameraFragment extends Fragment {
 
     //--------------------------------Khai báo biến toàn cục------------------------------------
     private String deviceSerial;
-    private int cameraNo;
+    private int cameraNo = -1;
     private String verifyCode;
-
     private int ptzSpeed = 2;
     private String recordFilePath;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private int idCam = -1;
+    private String tenCam;
+
     //--------------------------------Khai báo biến cờ------------------------------------
     private boolean isSurfaceCreated = false;
     private boolean isRecording = false;
@@ -117,6 +125,9 @@ public class CameraFragment extends Fragment {
         tvDateTime = view.findViewById(R.id.tvDateTime);
         btnFlip = view.findViewById(R.id.btnFlip);
         spinnerCamera = view.findViewById(R.id.spinnerCameraList);
+        btnAdd = view.findViewById(R.id.btnAdd);
+        btnEdit = view.findViewById(R.id.btnEdit);
+        btnDelete = view.findViewById(R.id.btnDelete);
 
         //-----------------------------------Cấp quyền-----------------------------------------
         requestPermission();
@@ -329,9 +340,203 @@ public class CameraFragment extends Fragment {
             return false; // Không xử lý các action khác
         });
 
+        btnAdd.setOnClickListener(v -> showAddCameraDialog());
+
+        btnEdit.setOnClickListener(v -> {
+            if (idCam != -1) {
+                showEditCameraDialog();
+            } else {
+                Toast.makeText(requireContext(),
+                        "Vui lòng chọn một camera để sửa.",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        btnDelete.setOnClickListener(v -> {
+            if (idCam != -1) {
+                showDeleteConfirmationDialog();
+            } else {
+                Toast.makeText(requireContext(),
+                        "Vui lòng chọn một camera để xoá.",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
 
 
     }
+    private void showDeleteConfirmationDialog() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Xác nhận xoá")
+                .setMessage("Bạn có chắc muốn xoá camera \"" + tenCam + "\" không?")
+                .setPositiveButton("Xoá", (dialog, which) -> {
+                    // Thực hiện xoá trên background thread
+                    executorService.execute(() -> {
+                        boolean success = DatabaseHelper.DeleteCamera(idCam);
+
+                        if (isAdded()) {
+                            requireActivity().runOnUiThread(() -> {
+                                if (success) {
+                                    Toast.makeText(requireContext(),
+                                            "Xoá camera thành công!",
+                                            Toast.LENGTH_SHORT).show();
+                                    // Reset lại biến và reload danh sách để Spinner cập nhật
+                                    idCam = -1;
+                                    deviceSerial = null;
+                                    cameraNo     = -1;
+                                    verifyCode   = null;
+                                    loadCameraList();
+                                } else {
+                                    Toast.makeText(requireContext(),
+                                            "Xoá camera thất bại. Vui lòng thử lại.",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                    });
+                })
+                .setNegativeButton("Huỷ", (dialog, which) -> dialog.dismiss())
+                .create()
+                .show();
+    }
+    private void showEditCameraDialog() {
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_add_camera, null);
+        // Lưu ý chúng ta đang reuse layout dialog_add_camera.xml với 4 EditText:
+        // edtDeviceName, edtDeviceCode, edtCameraNumber, edtVerificationCode
+
+        EditText edtDeviceName     = dialogView.findViewById(R.id.edtDeviceName);
+        EditText edtDeviceCode     = dialogView.findViewById(R.id.edtDeviceCode);
+        EditText edtCameraNumber   = dialogView.findViewById(R.id.edtCameraNumber);
+        EditText edtVerificationCode = dialogView.findViewById(R.id.edtVerificationCode);
+
+        edtDeviceName.setText(tenCam);
+
+        if (idCam != -1) {
+            if (deviceSerial != null && cameraNo != -1 && verifyCode != null ) {
+                edtDeviceCode.setText(deviceSerial);
+                edtCameraNumber.setText(String.valueOf(cameraNo));
+                edtVerificationCode.setText(verifyCode);
+            }
+        }
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Sửa thông tin Camera")
+                .setView(dialogView)
+                .setPositiveButton("Cập nhật", (dialog, which) -> {
+                    String newTenThietBi   = edtDeviceName.getText().toString().trim();
+                    String newMaThietBi    = edtDeviceCode.getText().toString().trim();
+                    String newSoCamera     = edtCameraNumber.getText().toString().trim();
+                    String newMaXacNhan    = edtVerificationCode.getText().toString().trim();
+
+                    if (newTenThietBi.isEmpty() ||
+                            newMaThietBi.isEmpty() ||
+                            newSoCamera.isEmpty() ||
+                            newMaXacNhan.isEmpty()) {
+
+                        Toast.makeText(requireContext(),
+                                "Vui lòng điền đủ tất cả thông tin.",
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    // Ghép diaChiMAC mới
+                    String newDiaChiMAC = newMaThietBi + " " + newSoCamera + " " + newMaXacNhan;
+
+                    // Thực hiện update trên luồng nền
+                    executorService.execute(() -> {
+                        boolean success = DatabaseHelper.updateCamera(
+                                newDiaChiMAC,
+                                newTenThietBi,
+                                idCam);
+
+                        // Quay về UI Thread để show Toast và có thể refresh spinner
+                        if (isAdded()) {
+                            requireActivity().runOnUiThread(() -> {
+                                if (success) {
+                                    Toast.makeText(requireContext(),
+                                            "Cập nhật camera thành công!", Toast.LENGTH_SHORT).show();
+
+                                    // Nếu muốn load lại spinner để thấy tên mới, bạn có thể gọi loadCameraList()
+                                    loadCameraList();
+                                } else {
+                                    Toast.makeText(requireContext(),
+                                            "Cập nhật camera thất bại. Vui lòng thử lại.", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                    });
+
+                })
+                .setNegativeButton("Hủy", (dialog, which) -> {
+                    dialog.dismiss();
+                })
+                .create()
+                .show();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        executorService.shutdownNow(); // Dọn dẹp executor khi Fragment bị destroy
+    }
+    private void showAddCameraDialog() {
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_add_camera, null);
+
+        EditText edtDeviceName = dialogView.findViewById(R.id.edtDeviceName);
+        EditText edtDeviceCode = dialogView.findViewById(R.id.edtDeviceCode);
+        EditText edtCameraNumber = dialogView.findViewById(R.id.edtCameraNumber);
+        EditText edtVerificationCode = dialogView.findViewById(R.id.edtVerificationCode);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Thêm Camera mới")
+                .setView(dialogView)
+                .setPositiveButton("Lưu", (dialog, which) -> {
+                    String tenThietBi = edtDeviceName.getText().toString().trim();
+                    String maThietBi = edtDeviceCode.getText().toString().trim();
+                    String soCamera = edtCameraNumber.getText().toString().trim();
+                    String maXacNhan = edtVerificationCode.getText().toString().trim();
+
+                    if (tenThietBi.isEmpty() ||
+                            maThietBi.isEmpty() ||
+                            soCamera.isEmpty() ||
+                            maXacNhan.isEmpty()) {
+
+                        Toast.makeText(requireContext(),
+                                "Vui lòng điền đủ tất cả thông tin.",
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    String diaChiMAC = maThietBi + " " + soCamera + " " + maXacNhan;
+                    Toast.makeText(requireContext(),
+                            diaChiMAC,
+                            Toast.LENGTH_SHORT).show();
+                    executorService.execute(() -> {
+                        boolean success = DatabaseHelper.insertCamera(diaChiMAC, tenThietBi);
+
+                        // Sau khi xong, đưa kết quả lên UI Thread
+                        requireActivity().runOnUiThread(() -> {
+                            if (success) {
+                                Toast.makeText(requireContext(),
+                                        "Thêm camera thành công!",
+                                        Toast.LENGTH_SHORT).show();
+                                loadCameraList();
+                            } else {
+                                Toast.makeText(requireContext(),
+                                        "Thêm camera thất bại. Vui lòng thử lại.",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    });
+
+                })
+                .setNegativeButton("Hủy", (dialog, which) -> {
+                    dialog.dismiss();
+                })
+                .create()
+                .show();
+    }
+
     private void loadCameraList() {
         DatabaseHelper dbHelper = new DatabaseHelper(requireContext());
         dbHelper.loadCameraList(new DeviceCallback() {
@@ -352,7 +557,8 @@ public class CameraFragment extends Fragment {
                         String diaChiMAC = deviceList.get(position).getDiaChiMAC();
                         //Log.d("MAC_Selected", diaChiMAC);
 
-                        // Tách chuỗi theo dấu cách
+                        idCam = deviceList.get(position).getId();
+                        tenCam = deviceList.get(position).getTenThietBi();
                         String[] parts = diaChiMAC.split(" ");
 
                         if (parts.length == 3) {
@@ -360,9 +566,9 @@ public class CameraFragment extends Fragment {
                             cameraNo = Integer.parseInt(parts[1]);;
                             verifyCode = parts[2];
 
-                            Log.d("DeviceSerial", deviceSerial);
-                            Log.d("CameraNo", parts[1]);
-                            Log.d("VerifyCode", verifyCode);
+//                            Log.d("DeviceSerial", deviceSerial);
+//                            Log.d("CameraNo", parts[1]);
+//                            Log.d("VerifyCode", verifyCode);
 
                             playLiveView();
                             checkStatusCamera();

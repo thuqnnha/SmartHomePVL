@@ -203,20 +203,49 @@ public class DatabaseHelper {
             }
         });
     }
-
-
-
-
-    public static boolean updateUser(String oldusername, String newusername, String password, String phone, String email) {
-        String query = "INSERT INTO quanlykho_users (Username = ?, Password = ?, Phone = ?, Email = ? WHERE Username = ?)";
+    public static boolean insertCamera(String DiaChiMAC, String TenThietBi) {
+        String query = "INSERT INTO smarthome_device (DiaChiMAC, TenThietBi, LoaiThietBi, IDPhong) VALUES (?,?,?,?)";
         try (Connection connection = connect();
              PreparedStatement ps = connection.prepareStatement(query)) {
 
-            ps.setString(1, newusername);
-            ps.setString(2, password);
-            ps.setString(3, phone);
-            ps.setString(4, email);
-            ps.setString(5, oldusername);
+            ps.setString(1, DiaChiMAC);
+            ps.setString(2, TenThietBi);
+            ps.setInt(3, 0);
+            ps.setInt(4, 9);
+
+
+            int rowsInserted = ps.executeUpdate();
+            return rowsInserted > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean updateCamera(String DiaChiMAC, String TenThietBi, int ID) {
+        String query = "UPDATE smarthome_device SET DiaChiMAC = ?, TenThietBi = ? WHERE ID = ?";
+        try (Connection connection = connect();
+             PreparedStatement ps = connection.prepareStatement(query)) {
+
+            ps.setString(1, DiaChiMAC);
+            ps.setString(2, TenThietBi);
+            ps.setInt(3, ID);
+
+            int rowsUpdated = ps.executeUpdate();
+            return rowsUpdated > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    public static boolean DeleteCamera(int ID) {
+        String query = "DELETE FROM smarthome_device WHERE ID = ?";
+        try (Connection connection = connect();
+             PreparedStatement ps = connection.prepareStatement(query)) {
+
+            ps.setInt(1, ID);
 
             int rowsUpdated = ps.executeUpdate();
             return rowsUpdated > 0;
