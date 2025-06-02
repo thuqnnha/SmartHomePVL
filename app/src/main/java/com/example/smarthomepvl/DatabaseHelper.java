@@ -98,6 +98,7 @@ public class DatabaseHelper {
         void onError(String message);
     }
 
+
     public void loadRoom(RoomCallback callback) {
         executorService.execute(() -> {
             String query = "SELECT IDPhong, TenPhong FROM smarthome_rooms";
@@ -172,6 +173,33 @@ public class DatabaseHelper {
             } catch (Exception e) {
                 e.printStackTrace();
                 new Handler(Looper.getMainLooper()).post(() -> callback.onError("Lỗi khi tải thiết bị"));
+            }
+        });
+    }
+    public void loadCameraList(CameraFragment.DeviceCallback callback) {
+        executorService.execute(() -> {
+            String query = "SELECT ID, DiaChiMAC, TenThietBi, LoaiThietBi FROM smarthome_device WHERE LoaiThietBi = 0";
+            List<Device> cameraList = new ArrayList<>();
+
+            try (Connection conn = connect();
+                 PreparedStatement ps = conn.prepareStatement(query)) {
+
+                ResultSet rs = ps.executeQuery();
+
+                while (rs.next()) {
+                    int id = rs.getInt("ID");
+                    String mac = rs.getString("DiaChiMAC");
+                    String ten = rs.getString("TenThietBi");
+                    int loai = rs.getInt("LoaiThietBi");
+
+                    cameraList.add(new Device(id, mac, ten, loai));
+                }
+
+                new Handler(Looper.getMainLooper()).post(() -> callback.onDevicesLoaded(cameraList));
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                new Handler(Looper.getMainLooper()).post(() -> callback.onError("Lỗi khi tải danh sách camera"));
             }
         });
     }

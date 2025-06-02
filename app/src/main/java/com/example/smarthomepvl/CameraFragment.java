@@ -20,7 +20,10 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,7 +45,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class CameraFragment extends Fragment {
@@ -53,11 +58,14 @@ public class CameraFragment extends Fragment {
     private FloatingActionButton fabCapture ;
     private ImageButton btnSleep, btnRecord, btnTalk, btnListen, btnUp, btnLeft, btnRight, btnDown, btnFlip;
     private TextView tvStatus, tvDateTime;
+    private Spinner spinnerCamera;
+    private ArrayAdapter<String> cameraAdapter;
+    private List<Device> cameraList = new ArrayList<>();
 
     //--------------------------------Khai báo biến toàn cục------------------------------------
-    private String deviceSerial = "F69721360";
-    private int cameraNo = 1;
-    private String verifyCode = "RVNRNT";
+    private String deviceSerial;
+    private int cameraNo;
+    private String verifyCode;
 
     private int ptzSpeed = 2;
     private String recordFilePath;
@@ -80,7 +88,7 @@ public class CameraFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        checkStatusCamera();
+
     }
 
     @Override
@@ -108,11 +116,13 @@ public class CameraFragment extends Fragment {
         tvStatus = view.findViewById(R.id.tvStatus);
         tvDateTime = view.findViewById(R.id.tvDateTime);
         btnFlip = view.findViewById(R.id.btnFlip);
+        spinnerCamera = view.findViewById(R.id.spinnerCameraList);
 
         //-----------------------------------Cấp quyền-----------------------------------------
         requestPermission();
         //-------------------------------------------------------------------------------------
         updateDateTime();
+        loadCameraList();
 
         mHolder = mSurfaceView.getHolder();
         mHolder.addCallback(new SurfaceHolder.Callback() {
@@ -138,7 +148,7 @@ public class CameraFragment extends Fragment {
                 }
             }
         });
-       playLiveView();
+
 //
 //        // Nút Stop
 //        btnStop.setOnClickListener(v -> {
@@ -322,6 +332,64 @@ public class CameraFragment extends Fragment {
 
 
     }
+    private void loadCameraList() {
+        DatabaseHelper dbHelper = new DatabaseHelper(requireContext());
+        dbHelper.loadCameraList(new DeviceCallback() {
+            @Override
+            public void onDevicesLoaded(List<Device> deviceList) {
+                List<String> tenList = new ArrayList<>();
+                for (Device d : deviceList) {
+                    tenList.add(d.getTenThietBi());
+                }
+
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, tenList);
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                spinnerCamera.setAdapter(adapter);
+
+                spinnerCamera.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                        String diaChiMAC = deviceList.get(position).getDiaChiMAC();
+                        //Log.d("MAC_Selected", diaChiMAC);
+
+                        // Tách chuỗi theo dấu cách
+                        String[] parts = diaChiMAC.split(" ");
+
+                        if (parts.length == 3) {
+                            deviceSerial = parts[0];
+                            cameraNo = Integer.parseInt(parts[1]);;
+                            verifyCode = parts[2];
+
+                            Log.d("DeviceSerial", deviceSerial);
+                            Log.d("CameraNo", parts[1]);
+                            Log.d("VerifyCode", verifyCode);
+
+                            playLiveView();
+                            checkStatusCamera();
+
+                        } else {
+                            Log.e("MAC_Parse_Error", "Định dạng MAC không hợp lệ: " + diaChiMAC);
+                        }
+                    }
+
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {}
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    public interface DeviceCallback {
+        void onDevicesLoaded(List<Device> deviceList);
+        void onError(String message);
+    }
+
     private void updateDateTime() {
         // Lấy thời gian hiện tại
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
