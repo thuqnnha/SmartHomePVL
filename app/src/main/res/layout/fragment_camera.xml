@@ -20,7 +20,6 @@
         android:orientation="horizontal"
         android:elevation="4dp">
 
-        <!-- ComboBox chọn camera -->
         <Spinner
             android:id="@+id/spinnerCameraList"
             android:layout_width="0dp"
@@ -33,10 +32,8 @@
             android:paddingEnd="32dp"
             android:textSize="14sp"
             android:popupElevation="8dp"
-            android:layout_gravity="center_vertical"
-            />
+            android:layout_gravity="center_vertical" />
 
-        <!-- Container cho thời gian và trạng thái -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -73,7 +70,17 @@
         android:background="#EDF2F7"
         android:paddingVertical="8dp"
         android:orientation="horizontal"
-        android:gravity="right">
+        android:gravity="end">
+
+        <ImageButton
+            android:id="@+id/btnSettings"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Cài đặt"
+            android:src="@drawable/ic_setting"
+            app:tint="#4A5568"
+            android:layout_marginHorizontal="8dp"/>
 
         <ImageButton
             android:id="@+id/btnAdd"
@@ -106,187 +113,85 @@
             android:layout_marginHorizontal="8dp"/>
     </LinearLayout>
 
-    <!-- Khung hình camera tỉ lệ 4:3 (hình chữ nhật) -->
+    <!-- Khung hiển thị camera -->
     <FrameLayout
+        android:id="@+id/cameraFrame"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:layout_above="@+id/bottomControlPanel"
-        android:layout_below="@+id/editToolbar"
+        android:layout_below="@id/editToolbar"
+        android:layout_above="@+id/ptzPanel"
         android:padding="8dp">
 
         <SurfaceView
             android:id="@+id/surfaceView"
             android:layout_width="match_parent"
             android:layout_height="250dp"
-            android:layout_gravity="center"
-            android:layout_weight="3"
-            android:layout_marginBottom="50dp"/>
-
-        <!-- Overlay hướng dẫn tỉ lệ -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_gravity="center"
-            android:layout_weight="4"
-            android:background="@android:color/transparent"
-            android:visibility="invisible"/>
+            android:layout_gravity="center"/>
     </FrameLayout>
 
-    <!-- Panel điều khiển dưới cùng -->
-    <LinearLayout
-        android:id="@+id/bottomControlPanel"
+    <!-- Panel PTZ (điều hướng camera) -->
+    <RelativeLayout
+        android:id="@+id/ptzPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/bottomNavigation"
+        android:padding="24dp">
+
+        <ImageButton
+            android:id="@+id/btnUp"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/ic_arrow_up"
+            android:background="@drawable/btn_light_selector"
+            android:contentDescription="Lên"
+            app:tint="#4A5568" />
+
+        <ImageButton
+            android:id="@+id/btnLeft"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@id/btnUp"
+            android:src="@drawable/ic_arrow_left"
+            android:background="@drawable/btn_light_selector"
+            android:contentDescription="Trái"
+            app:tint="#4A5568" />
+
+        <ImageButton
+            android:id="@+id/btnRight"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/btnUp"
+            android:src="@drawable/ic_arrow_right"
+            android:background="@drawable/btn_light_selector"
+            android:contentDescription="Phải"
+            app:tint="#4A5568" />
+
+        <ImageButton
+            android:id="@+id/btnDown"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_below="@id/btnUp"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/ic_arrow_down"
+            android:background="@drawable/btn_light_selector"
+            android:contentDescription="Xuống"
+            app:tint="#4A5568" />
+    </RelativeLayout>
+
+    <!-- Menu điều khiển dưới cùng -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:background="#FFFFFF"
-        android:padding="24dp"
-        android:orientation="vertical"
-        android:elevation="8dp">
-
-        <!-- Hàng 1: Điều hướng PTZ -->
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            android:gravity="center">
-
-            <!-- Nút điều hướng -->
-            <ImageButton
-                android:id="@+id/btnUp"
-                android:layout_width="52dp"
-                android:layout_height="52dp"
-                android:layout_centerHorizontal="true"
-                android:src="@drawable/ic_arrow_up"
-                android:background="@drawable/btn_light_selector"
-                android:contentDescription="Lên"
-                app:tint="#4A5568" />
-
-            <ImageButton
-                android:id="@+id/btnLeft"
-                android:layout_width="52dp"
-                android:layout_height="52dp"
-                android:layout_centerVertical="true"
-                android:layout_toLeftOf="@id/btnUp"
-                android:src="@drawable/ic_arrow_left"
-                android:background="@drawable/btn_light_selector"
-                android:contentDescription="Trái"
-                app:tint="#4A5568" />
-
-            <ImageButton
-                android:id="@+id/btnRight"
-                android:layout_width="52dp"
-                android:layout_height="52dp"
-                android:layout_centerVertical="true"
-                android:layout_toRightOf="@id/btnUp"
-                android:src="@drawable/ic_arrow_right"
-                android:background="@drawable/btn_light_selector"
-                android:contentDescription="Phải"
-                app:tint="#4A5568" />
-
-            <ImageButton
-                android:id="@+id/btnDown"
-                android:layout_width="52dp"
-                android:layout_height="52dp"
-                android:layout_below="@id/btnUp"
-                android:layout_centerHorizontal="true"
-                android:src="@drawable/ic_arrow_down"
-                android:background="@drawable/btn_light_selector"
-                android:contentDescription="Xuống"
-                app:tint="#4A5568" />
-        </RelativeLayout>
-
-        <!-- Hàng 2: Chức năng chính -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <!-- Nút chế độ ngủ -->
-            <ImageButton
-                android:id="@+id/btnSleep"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:src="@drawable/ic_sleep_mode"
-                android:background="@drawable/btn_primary_selector"
-                android:contentDescription="Chế độ ngủ"
-                android:layout_marginEnd="32dp"
-                app:tint="#FFFFFF" />
-
-            <!-- Nút ghi video -->
-            <ImageButton
-                android:id="@+id/btnRecord"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
-                android:src="@drawable/ic_videocam_off"
-                android:background="@drawable/btn_record_selector"
-                android:contentDescription="Ghi video"
-                app:tint="#FFFFFF" />
-
-            <!-- Nút đàm thoại -->
-            <ImageButton
-                android:id="@+id/btnTalk"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:src="@drawable/ic_mic_off"
-                android:background="@drawable/btn_primary_selector"
-                android:contentDescription="Đàm thoại"
-                android:layout_marginStart="32dp"
-                app:tint="#FFFFFF" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <!-- Nút lật ảnh (flip) ở góc dưới bên trái -->
-    <ImageButton
-        android:id="@+id/btnFlip"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:layout_above="@id/bottomControlPanel"
-        android:layout_alignParentStart="true"
-        android:layout_margin="10dp"
-        android:src="@drawable/ic_flip"
-        android:background="@drawable/btn_light_selector"
-        android:contentDescription="Lật ảnh"
-        app:tint="#4A5568" />
-    <!-- Nút phụ trợ góc dưới phải -->
-    <ImageButton
-        android:id="@+id/btnSettings"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:layout_above="@id/bottomControlPanel"
-        android:layout_alignParentEnd="true"
-        android:layout_margin="10dp"
-        android:src="@drawable/ic_setting"
-        android:background="@drawable/btn_light_selector"
-        android:contentDescription="Cài đặt"
-        app:tint="#4A5568" />
-    <!-- Nút nghe âm thanh từ camera -->
-    <ImageButton
-        android:id="@+id/btnListen"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:layout_above="@id/bottomControlPanel"
-        android:layout_toStartOf="@id/btnSettings"
-        android:layout_margin="10dp"
-        android:src="@drawable/ic_talk_off"
-        android:background="@drawable/btn_light_selector"
-        android:contentDescription="Nghe âm thanh"
-        app:tint="#4A5568" />
-
-
-    <!-- Floating Action Button cho chụp nhanh -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabCapture"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/bottomControlPanel"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="24dp"
-        android:src="@drawable/ic_camera"
-        app:backgroundTint="#4299E1"
-        app:tint="#FFFFFF"
-        app:elevation="6dp"
-        app:rippleColor="#3182CE"/>
-
+        android:paddingTop="8dp"
+        android:elevation="8dp"
+        app:itemIconTint="@color/nav_icon_color"
+        app:itemTextColor="@color/nav_icon_color"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav_menu" />
 </RelativeLayout>

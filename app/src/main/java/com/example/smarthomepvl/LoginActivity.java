@@ -41,16 +41,21 @@ public class LoginActivity extends AppCompatActivity {
             try {
                 List<EZAreaInfo> areaList = EZGlobalSDK.getInstance().getAreaList();
                 if (areaList != null && !areaList.isEmpty()) {
-                    int areaCode = areaList.get(0).getId();
+                    int areaId = areaList.get(0).getId();
 
-                    runOnUiThread(() -> EZGlobalSDK.getInstance().openLoginPage(areaCode, 0));
+                    runOnUiThread(() -> {
+                        // Gọi login từ context là LoginActivity (không phải application)
+                        EZGlobalSDK.getInstance().openLoginPage(areaId);
+                    });
                 }
             } catch (BaseException e) {
                 e.printStackTrace();
                 runOnUiThread(() ->
-                        Toast.makeText(this, "Lỗi lấy khu vực: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                        Toast.makeText(this, "Lỗi lấy khu vực: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
             }
         });
+
 
         // Đăng ký receiver nhận khi đăng nhập thành công
         IntentFilter filter = new IntentFilter(Constant.OAUTH_SUCCESS_ACTION);
@@ -61,6 +66,7 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+
     private final BroadcastReceiver oauthSuccessReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -69,10 +75,10 @@ public class LoginActivity extends AppCompatActivity {
 
             // Lấy access token tự động
             EZAccessToken tokenObj = EZGlobalSDK.getInstance().getEZAccessToken();
-            if (tokenObj != null) {
-//                String accessToken = tokenObj.getAccessToken();
-//                Log.d("LoginActivity", "AccessToken: " + accessToken);
-//                //EZGlobalSDK.getInstance().setAccessToken(accessToken); // Nếu SDK yêu cầu
+            if (tokenObj != null && tokenObj.getAccessToken() != null) {
+                String accessToken = tokenObj.getAccessToken();
+                Log.d("LoginActivity", "AccessToken: " + accessToken);
+                EZGlobalSDK.getInstance().setAccessToken(accessToken); // Nếu SDK yêu cầu
 //
 //                SharedPreferences preferences = getSharedPreferences("ezviz", MODE_PRIVATE);
 //                preferences.edit().putString("access_token", accessToken).apply();
@@ -80,11 +86,17 @@ public class LoginActivity extends AppCompatActivity {
                 //Chuyển form
                 Intent i = new Intent(LoginActivity.this, NaviActivity.class);
                 startActivity(i);
+
                 finish(); // Đóng login
             } else {
                 Log.d("LoginActivity", "AccessToken object is null");
             }
         }
     };
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(oauthSuccessReceiver);
+    }
 
 }

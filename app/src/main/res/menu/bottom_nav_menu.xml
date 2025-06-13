@@ -1,0 +1,26 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_capture"
+        android:icon="@drawable/ic_camera"
+        android:title="Chụp màn hình" />
+    <item
+        android:id="@+id/nav_record"
+        android:icon="@drawable/ic_videocam_off"
+        android:title="Ghi" />
+    <item
+        android:id="@+id/nav_talk"
+        android:icon="@drawable/ic_mic_off"
+        android:title="Đàm thoại" />
+    <item
+        android:id="@+id/nav_sleep"
+        android:icon="@drawable/ic_sleep_mode"
+        android:title="Ngủ" />
+    <item
+        android:id="@+id/nav_flip"
+        android:icon="@drawable/ic_flip"
+        android:title="Lât ảnh" />
+<!--    <item-->
+<!--        android:id="@+id/nav_listen"-->
+<!--        android:icon="@drawable/ic_talk_off"-->
+<!--        android:title="Nghe" />-->
+</menu>
