@@ -11,16 +11,7 @@
         android:id="@+id/nav_talk"
         android:icon="@drawable/ic_mic_off"
         android:title="Đàm thoại" />
-    <item
-        android:id="@+id/nav_sleep"
-        android:icon="@drawable/ic_sleep_mode"
-        android:title="Ngủ" />
-    <item
-        android:id="@+id/nav_flip"
-        android:icon="@drawable/ic_flip"
-        android:title="Lât ảnh" />
-<!--    <item-->
-<!--        android:id="@+id/nav_listen"-->
-<!--        android:icon="@drawable/ic_talk_off"-->
-<!--        android:title="Nghe" />-->
+    <item android:id="@+id/nav_more"
+        android:icon="@drawable/ic_more_vert"
+        android:title="Thêm" />
 </menu>

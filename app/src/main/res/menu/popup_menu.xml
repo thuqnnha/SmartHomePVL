@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_listen"
+        android:icon="@drawable/ic_talk_off"
+        android:title="Âm thanh"/>
+    <item
+        android:id="@+id/action_sleep"
+        android:icon="@drawable/ic_sleep_mode"
+        android:title="Chế độ ngủ"/>
+    <item
+        android:id="@+id/action_flip"
+        android:icon="@drawable/ic_flip"
+        android:title="Lật ảnh"/>
+</menu>

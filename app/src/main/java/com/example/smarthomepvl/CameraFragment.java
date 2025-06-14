@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -15,6 +16,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -25,17 +27,20 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.PopupMenu;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.view.menu.MenuPopupHelper;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.videogo.openapi.EZConstants;
 import com.videogo.openapi.EZGlobalSDK;
@@ -47,6 +52,7 @@ import android.Manifest;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.net.IDN;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -169,25 +175,23 @@ public class CameraFragment extends Fragment {
         //bottom navi
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
+
             if (id == R.id.nav_capture) {
                 capManHinh();
-                return true;
+                return false;
             } else if (id == R.id.nav_record) {
                 quayManHinh();
-                return true;
+                return false;
             } else if (id == R.id.nav_talk) {
                 amThanhHaiChieu();
-                return true;
-            } else if (id == R.id.nav_sleep) {
-                cheDoNgu();
-                return true;
-            } else if (id == R.id.nav_flip) {
-                latAnh();
-                return true;
+                return false;
+            } else if (id == R.id.nav_more) {
+                showPopupMenu(view.findViewById(R.id.nav_more));
+                return false;
             }
-            item.setChecked(false);
+            //item.setChecked(false);
 
-            return true;
+            return false;
         });
 
         // TouchListener cho nút LÊN
@@ -282,6 +286,30 @@ public class CameraFragment extends Fragment {
 
 
     }
+    private void showPopupMenu(View anchor) {
+        if (anchor == null) return;
+
+        PopupMenu popupMenu = new PopupMenu(requireContext(), anchor);
+        popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
+
+        popupMenu.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+                if (id == R.id.action_listen)
+                {
+                    amThanhMotChieu();
+                    return true;
+                } else if (id == R.id.action_sleep) {
+                    cheDoNgu();
+                    return true;
+                } else if (id == R.id.action_flip) {
+                    latAnh();
+                    return true;
+                }
+            return false;
+        });
+
+        popupMenu.show();
+    }
     private void capManHinh()
     {
         Bitmap capturedBitmap = mEZPlayer.capturePicture();
@@ -324,12 +352,12 @@ public class CameraFragment extends Fragment {
             if (!isSoundOn) {
                 mEZPlayer.openSound();
                 isSoundOn = true;
-                bottomNavigationView.getMenu().findItem(R.id.nav_talk).setIcon(R.drawable.ic_talk_on);
+                //bottomNavigationView.getMenu().findItem(R.id.action_listen).setIcon(R.drawable.ic_talk_on);
                 Toast.makeText(requireContext(), "Âm thanh đã bật", Toast.LENGTH_SHORT).show();
             } else {
                 mEZPlayer.closeSound();
                 isSoundOn = false;
-                bottomNavigationView.getMenu().findItem(R.id.nav_talk).setIcon(R.drawable.ic_talk_off);
+                //bottomNavigationView.getMenu().findItem(R.id.action_listen).setIcon(R.drawable.ic_talk_off);
                 Toast.makeText(requireContext(), "Âm thanh đã tắt", Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
