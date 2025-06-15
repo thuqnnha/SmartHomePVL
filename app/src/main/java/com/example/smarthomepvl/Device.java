@@ -1,6 +1,7 @@
 package com.example.smarthomepvl;
-
-public class Device {
+import java.io.Serializable;
+public class Device implements Serializable{
+    private static final long serialVersionUID = 1L;
     private int id;
     private String diaChiMAC;
     private String tenThietBi;

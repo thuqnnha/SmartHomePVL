@@ -51,9 +51,10 @@ public class HomeFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
-
+        //----------------------------Ánh xạ view--------------------------------------
         recyclerRooms = view.findViewById(R.id.recyclerRooms);
         btnAddRoom = view.findViewById(R.id.btnAddRoom);
+        ImageButton btnMicro = view.findViewById(R.id.btnMicro);
 
         recyclerRooms.setLayoutManager(new GridLayoutManager(getContext(), 2));
 
@@ -65,7 +66,6 @@ public class HomeFragment extends Fragment {
         });
 
         //Xử lý sự kiện khi bấm nút micro
-        ImageButton btnMicro = view.findViewById(R.id.btnMicro);
         btnMicro.setOnClickListener(v -> {
             if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.RECORD_AUDIO)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -187,7 +187,6 @@ public class HomeFragment extends Fragment {
 
         speechRecognizer.startListening(intent);
     }
-
     @Override
     public void onDestroy() {
         super.onDestroy();

@@ -31,6 +31,7 @@ import com.videogo.openapi.EZGlobalSDK;
 import com.videogo.openapi.EZPlayer;
 import com.videogo.openapi.bean.EZAccessToken;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RoomDetailFragment extends Fragment {
@@ -41,35 +42,9 @@ public class RoomDetailFragment extends Fragment {
     private String roomName;
     private int roomId;
 
-    private RecyclerView recyclerDevices;
-
-    private SurfaceView mSurfaceView;
-    private SurfaceHolder mHolder;
-    private EZPlayer mEZPlayer;
-
-    private boolean isSurfaceCreated = false;
-
-    private String deviceSerial = "F69721360";
-    private int cameraNo = 1;
-    private String verifyCode = "Thuan2012";
-    private Button btnPlay, btnStop;
-
-    private final BroadcastReceiver oauthSuccessReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Toast.makeText(context, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
-            Log.d("HomeFragment", "OAUTH_SUCCESS_ACTION - Lấy AccessToken và tạo player");
-
-            EZAccessToken tokenObj = EZGlobalSDK.getInstance().getEZAccessToken();
-            if (tokenObj != null) {
-                String accessToken = tokenObj.getAccessToken();
-                Log.d("HomeFragment", "AccessToken: " + accessToken);
-                EZGlobalSDK.getInstance().setAccessToken(accessToken);
-            } else {
-                Log.d("HomeFragment", "AccessToken object is null");
-            }
-        }
-    };
+    private RecyclerView recyclerDevices,recyclerCameras;
+    private TextView txtCameraTitle;
+    private TextView txtDeviceTitle;
 
     public RoomDetailFragment() {}
     public interface DeviceCallback {
@@ -90,14 +65,6 @@ public class RoomDetailFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Đăng ký receiver
-        IntentFilter filter = new IntentFilter(Constant.OAUTH_SUCCESS_ACTION);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            requireContext().registerReceiver(oauthSuccessReceiver, filter, Context.RECEIVER_EXPORTED);
-        } else {
-            ContextCompat.registerReceiver(requireContext(), oauthSuccessReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
-        }
-
         if (getArguments() != null) {
             roomName = getArguments().getString(ARG_ROOM_NAME);
             roomId = getArguments().getInt(ARG_ROOM_ID);
@@ -110,96 +77,27 @@ public class RoomDetailFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_room_detail, container, false);
 
+        //------------------------------------Ánh xạ view--------------------------------------
         recyclerDevices = view.findViewById(R.id.recyclerDevices);
+        recyclerCameras = view.findViewById(R.id.recyclerCameras);
+        txtCameraTitle = view.findViewById(R.id.txtCameraTitle);
+        txtDeviceTitle = view.findViewById(R.id.txtDeviceTitle);
+
         recyclerDevices.setLayoutManager(new LinearLayoutManager(getContext()));
 
         TextView tvRoomName = view.findViewById(R.id.txtRoomName);
         tvRoomName.setText(roomName);
 
-        loadDevicesAndCamera();
 
         return view;
     }
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        mSurfaceView = view.findViewById(R.id.surfaceViewCamera);
-        btnPlay = view.findViewById(R.id.btnPlay);
 
-        EZAccessToken tokenObj = EZGlobalSDK.getInstance().getEZAccessToken();
-        if (tokenObj != null) {
-            String accessToken = tokenObj.getAccessToken();
-            //Log.d("HomeFragment", "AccessToken: " + accessToken);
-            EZGlobalSDK.getInstance().setAccessToken(accessToken);
-        } else {
-            //Log.d("HomeFragment", "AccessToken object is null");
-        }
+        //------------------------------------Ánh xạ view--------------------------------------
 
-        mHolder = mSurfaceView.getHolder();
-        mHolder.addCallback(new SurfaceHolder.Callback() {
-
-            @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-                isSurfaceCreated = true;
-                if (mEZPlayer != null) {
-                    mEZPlayer.setSurfaceHold(holder);
-                    mEZPlayer.startRealPlay();
-                }
-            }
-
-            @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
-
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-                isSurfaceCreated = false;
-                if (mEZPlayer != null) {
-                    mEZPlayer.stopRealPlay();
-                    mEZPlayer.release();
-                    mEZPlayer = null;
-                }
-            }
-        });
-
-        // Nút Play
-        btnPlay.setOnClickListener(v -> {
-            playLiveView();
-            Toast.makeText(requireContext(), "Đang phát camera", Toast.LENGTH_SHORT).show();
-        });
-    }
-    private void playLiveView() {
-        if (mEZPlayer != null) {
-            mEZPlayer.stopRealPlay();
-            mEZPlayer.release();
-            mEZPlayer = null;
-        }
-
-        mEZPlayer = EZGlobalSDK.getInstance().createPlayer(deviceSerial, cameraNo);
-
-        if (mEZPlayer == null) {
-            requireActivity().runOnUiThread(() ->
-                    Toast.makeText(requireContext(), "Không tạo được player", Toast.LENGTH_SHORT).show());
-            return;
-        }
-
-        mEZPlayer.setPlayVerifyCode(verifyCode);
-
-        if (isSurfaceCreated) {
-            mEZPlayer.setSurfaceHold(mHolder);
-            mEZPlayer.startRealPlay();
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mEZPlayer != null) {
-            mEZPlayer.stopRealPlay();
-            mEZPlayer.release();
-            mEZPlayer = null;
-        }
-
-        requireContext().unregisterReceiver(oauthSuccessReceiver);
+        loadDevicesAndCamera();
     }
 
     private void loadDevicesAndCamera() {
@@ -209,10 +107,49 @@ public class RoomDetailFragment extends Fragment {
             @Override
             public void onDevicesLoaded(List<Device> deviceList) {
                 requireActivity().runOnUiThread(() -> {
-                    DeviceAdapter adapter = new DeviceAdapter(deviceList, (device, isOn) -> {
+                    List<Device> cameraList = new ArrayList<>();
+                    List<Device> otherDevices = new ArrayList<>();
+
+                    int listCam = 0;
+                    int listDevice = 0;
+
+                    // Phân loại thiết bị
+                    for (Device device : deviceList) {
+                        if (device.getLoaiThietBi() == 0) {
+                            cameraList.add(device);
+                        } else {
+                            otherDevices.add(device);
+                        }
+                        listCam = cameraList.size();
+                        listDevice = otherDevices.size();
+                    }
+                    txtCameraTitle.setText("Danh sách camera (" + listCam + ")");
+                    txtDeviceTitle.setText("Thiết bị trong phòng (" + listDevice + ")");
+
+                    // Adapter camera
+                    CameraAdapter cameraAdapter = new CameraAdapter(cameraList, camera -> {
+                        // Mở fragment cấu hình camera
+                        Bundle bundle = new Bundle();
+                        bundle.putSerializable("camera", camera);
+
+                        CameraControllerFragment fragment = new CameraControllerFragment();
+                        fragment.setArguments(bundle);
+
+                        requireActivity().getSupportFragmentManager()
+                                .beginTransaction()
+//                                .replace(R.id.fragment_container, fragment)
+                                .add(R.id.fragment_container, fragment)
+                                .hide(RoomDetailFragment.this)
+                                .addToBackStack(null)
+                                .commit();
+                    });
+                    recyclerCameras.setAdapter(cameraAdapter);
+
+                    // Adapter thiết bị khác
+                    DeviceAdapter deviceAdapter = new DeviceAdapter(otherDevices, (device, isOn) -> {
                         Toast.makeText(getContext(), device.getTenThietBi() + ": " + (isOn ? "Bật" : "Tắt"), Toast.LENGTH_SHORT).show();
                     });
-                    recyclerDevices.setAdapter(adapter);
+                    recyclerDevices.setAdapter(deviceAdapter);
                 });
             }
 
@@ -224,4 +161,5 @@ public class RoomDetailFragment extends Fragment {
             }
         });
     }
+
 }
