@@ -1,6 +1,15 @@
 package com.example.smarthomepvl;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.SubMenu;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -63,10 +72,6 @@ public class NaviActivity extends AppCompatActivity {
 
             if (id == R.id.nav_home) {
                 selectedFragment = new HomeFragment();
-            } else if (id == R.id.nav_profile) {
-                selectedFragment = new ProfileFragment();
-            }else if (id == R.id.nav_camera) {
-                selectedFragment = new CameraFragment();
             }
 
             if (selectedFragment != null) {
@@ -87,5 +92,61 @@ public class NaviActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
         }
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        // Tùy chỉnh màu icon và text cho các item con
+        MenuItem logoutItem = menu.findItem(R.id.action_logout);
+        SubMenu subMenu = logoutItem.getSubMenu();
+
+        if (subMenu != null) {
+            for (int i = 0; i < subMenu.size(); i++) {
+                MenuItem subItem = subMenu.getItem(i);
+
+                // Đổi màu icon
+                Drawable icon = subItem.getIcon();
+                if (icon != null) {
+                    icon.mutate();
+                    icon.setTint(Color.BLACK); // ← đổi sang màu bạn muốn
+                    subItem.setIcon(icon);
+                }
+
+                // Đổi màu chữ (áp dụng với Spannable)
+                SpannableString s = new SpannableString(subItem.getTitle());
+                s.setSpan(new ForegroundColorSpan(Color.BLACK), 0, s.length(), 0); // ← màu chữ
+                subItem.setTitle(s);
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // TODO: xu li dang xuat
+        int id = item.getItemId();
+
+        if (id == R.id.action_logout_normal) {
+
+            return true;
+        } else if (id == R.id.action_logout_db) {
+            logOutAndDeleteAccount();
+            return true;
+        } else if (id == R.id.action_logout_api) {
+
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    private void logOutAndDeleteAccount()
+    {
+        SharedPreferences prefs = getSharedPreferences("loginPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.clear();
+        editor.apply();
+
+        Intent intent = new Intent(NaviActivity.this, LoginDbActivity.class);
+        startActivity(intent);
+        finish();
     }
 }

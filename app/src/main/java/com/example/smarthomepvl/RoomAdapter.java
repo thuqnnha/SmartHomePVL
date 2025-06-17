@@ -18,6 +18,7 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
 
     public interface OnRoomClickListener {
         void onRoomClick(Room room);
+        void onRoomLongClick(View view, Room room);
     }
 
     public RoomAdapter(List<Room> roomList, OnRoomClickListener listener) {
@@ -62,12 +63,20 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
 
             // Nếu bạn muốn đổi màu/tùy biến nền theo room.getBackgroundResId()
             roomItemLayout.setBackgroundResource(room.getBackgroundResId());
-
+            //click
             itemView.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onRoomClick(room);
                 }
             });
+            //long click
+            itemView.setOnLongClickListener(v -> {
+                if (listener != null) {
+                    listener.onRoomLongClick(v, room);
+                }
+                return true;
+            });
+
         }
     }
 }

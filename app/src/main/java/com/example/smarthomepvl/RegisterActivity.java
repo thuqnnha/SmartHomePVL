@@ -46,7 +46,9 @@ public class RegisterActivity extends AppCompatActivity {
                 boolean success = DatabaseHelper.insertUser(username, password, email, phone);
                 runOnUiThread(() -> {
                     if (success) {
-                        Toast.makeText(this, "Đăng ký thành công", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                        intent.putExtra("success_message", "Đăng ký thành công, vui lòng đăng nhập");
+                        //Toast.makeText(this, "Đăng ký thành công", Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(this, LoginActivity.class));
                         finish();
                     } else {

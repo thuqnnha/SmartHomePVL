@@ -2,43 +2,56 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="24dp"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="16dp">
 
-    <!-- Tên thiết bị -->
-    <EditText
-        android:id="@+id/edtDeviceName"
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Tên thiết bị"
-        android:inputType="textPersonName"
-        android:paddingVertical="8dp" />
+        android:hint="Tên thiết bị">
 
-    <!-- Mã thiết bị -->
-    <EditText
-        android:id="@+id/edtDeviceCode"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etCameraName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Mã thiết bị (Ví dụ: F69721360)"
-        android:inputType="textNoSuggestions"
-        android:paddingVertical="8dp" />
+        android:hint="Số seri camera">
 
-    <!-- Số camera -->
-    <EditText
-        android:id="@+id/edtCameraNumber"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etSerial"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Số camera (Ví dụ: 1)"
-        android:inputType="number"
-        android:paddingVertical="8dp" />
+        android:layout_marginTop="8dp"
+        android:hint="Số camera">
 
-    <!-- Mã xác nhận -->
-    <EditText
-        android:id="@+id/edtVerificationCode"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etCameraNo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Mã xác nhận (Ví dụ: RVNRNT)"
-        android:inputType="textNoSuggestions"
-        android:paddingVertical="8dp" />
+        android:layout_marginTop="8dp"
+        android:hint="Mã xác thưc">
 
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etVerifyCode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"/>
+    </com.google.android.material.textfield.TextInputLayout>
 </LinearLayout>

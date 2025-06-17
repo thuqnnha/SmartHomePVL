@@ -4,5 +4,14 @@
     <color name="white">#FFFFFFFF</color>
     <color name="colorPrimary">#0288D1</color> <!-- Màu xanh dương đậm vừa phải -->
     <color name="colorAccent">#4DD0E1</color> <!-- hoặc chọn màu bạn thích -->
+    <color name="bgSoftBlue">#E3F2FD</color> <!-- Màu nền nhẹ -->
+    <color name="voiceResultBackground">#CCFFFFFF</color> <!-- Trắng trong suốt nhẹ -->
+    <color name="item_background_color">#FFF5F5F5</color> <!-- Light gray -->
+
+
+    <color name="primary">#6200EE</color>
+    <color name="primaryDark">#3700B3</color>
+    <color name="textPrimary">#212121</color>
+    <color name="textSecondary">#757575</color>
 
 </resources>

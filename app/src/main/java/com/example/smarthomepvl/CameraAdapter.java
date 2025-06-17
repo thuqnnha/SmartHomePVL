@@ -27,6 +27,7 @@ public class CameraAdapter extends RecyclerView.Adapter<CameraAdapter.CameraView
 
     public interface OnCameraClickListener {
         void onCameraClick(Device camera);
+        void onCameraLongClick(Device camera, View anchorView);
     }
 
     public CameraAdapter(List<Device> cameraList, OnCameraClickListener listener) {
@@ -57,7 +58,7 @@ public class CameraAdapter extends RecyclerView.Adapter<CameraAdapter.CameraView
                 holder.cameraNo = Integer.parseInt(parts[1]);
             } catch (NumberFormatException e) {
                 Log.e("CameraAdapter", "Lỗi chuyển cameraNo", e);
-                holder.cameraNo = 1; // fallback
+                holder.cameraNo = 1;
             }
             holder.verifyCode = parts[2];
         } else {
@@ -67,18 +68,16 @@ public class CameraAdapter extends RecyclerView.Adapter<CameraAdapter.CameraView
             holder.cameraNo = 1;
         }
 
-        // Nếu Surface đã được tạo thì bắt đầu phát
         if (holder.isSurfaceCreated) {
             holder.playLiveView();
         }
-        // Sự kiện click
+
+        // Click mở CameraControllerFragment
         holder.itemView.setOnClickListener(v -> {
             if (holder.deviceSerial != null && holder.verifyCode != null && holder.isCameraReady) {
                 if (listener != null) {
                     listener.onCameraClick(camera);
-                    Log.d("CameraAdapter", "isCameraReady: " + holder.isCameraReady);
 
-                    // Gọi fragment hiển thị camera
                     Fragment fragment = CameraControllerFragment.newInstance(
                             holder.deviceSerial,
                             holder.cameraNo,
@@ -87,18 +86,24 @@ public class CameraAdapter extends RecyclerView.Adapter<CameraAdapter.CameraView
 
                     ((AppCompatActivity) v.getContext()).getSupportFragmentManager()
                             .beginTransaction()
-                            .replace(R.id.fragment_container, fragment) // Thay bằng ID layout thực tế
+                            .replace(R.id.fragment_container, fragment)
                             .addToBackStack(null)
                             .commit();
                 }
-
             } else {
-                Log.d("CameraAdapter", "isCameraReady: " + holder.isCameraReady);
                 Toast.makeText(v.getContext(), "Camera không khả dụng", Toast.LENGTH_SHORT).show();
             }
         });
-    }
 
+        // Long click hiển thị popup menu
+        holder.itemView.setOnLongClickListener(v -> {
+            if (listener != null) {
+                listener.onCameraLongClick(camera, v);
+                return true;
+            }
+            return false;
+        });
+    }
 
     @Override
     public int getItemCount() {
@@ -119,7 +124,6 @@ public class CameraAdapter extends RecyclerView.Adapter<CameraAdapter.CameraView
 
         public CameraViewHolder(@NonNull View itemView) {
             super(itemView);
-
             txtCameraName = itemView.findViewById(R.id.txtCameraName);
             mSurfaceView = itemView.findViewById(R.id.surfaceViewCamera);
             mHolder = mSurfaceView.getHolder();
@@ -144,6 +148,15 @@ public class CameraAdapter extends RecyclerView.Adapter<CameraAdapter.CameraView
                 @Override
                 public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
             });
+
+//            // Long click trên SurfaceView
+//            mSurfaceView.setOnLongClickListener(v -> {
+//                if (listener != null && deviceSerial != null && verifyCode != null) {
+//                    listener.onCameraLongClick(cameraList.get(getAdapterPosition()), v);
+//                    return true;
+//                }
+//                return false;
+//            });
         }
 
         private void playLiveView() {
@@ -166,7 +179,6 @@ public class CameraAdapter extends RecyclerView.Adapter<CameraAdapter.CameraView
 
             mEZPlayer.setPlayVerifyCode(verifyCode);
 
-            // Đăng ký handler để nhận sự kiện lỗi phát
             mEZPlayer.setHandler(new android.os.Handler(msg -> {
                 switch (msg.what) {
                     case EZConstants.EZRealPlayConstants.MSG_REALPLAY_PLAY_FAIL:
@@ -187,8 +199,8 @@ public class CameraAdapter extends RecyclerView.Adapter<CameraAdapter.CameraView
                 isCameraReady = false;
             }
         }
-
     }
 }
+
 
 

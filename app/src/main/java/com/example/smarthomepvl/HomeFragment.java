@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,6 +31,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +44,7 @@ public class HomeFragment extends Fragment {
 
     private RecyclerView recyclerRooms;
     private FloatingActionButton btnAddRoom;
+    private TextView txtVoiceResult;
     private DatabaseHelper db;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private SpeechRecognizer speechRecognizer;
@@ -54,6 +57,7 @@ public class HomeFragment extends Fragment {
         //----------------------------Ánh xạ view--------------------------------------
         recyclerRooms = view.findViewById(R.id.recyclerRooms);
         btnAddRoom = view.findViewById(R.id.btnAddRoom);
+        txtVoiceResult = view.findViewById(R.id.txtVoiceResult);
         ImageButton btnMicro = view.findViewById(R.id.btnMicro);
 
         recyclerRooms.setLayoutManager(new GridLayoutManager(getContext(), 2));
@@ -90,13 +94,36 @@ public class HomeFragment extends Fragment {
         db.loadRoom(new DatabaseHelper.RoomCallback() {
             @Override
             public void onRoomsLoaded(List<Room> rooms) {
-                RoomAdapter adapter = new RoomAdapter(rooms, room -> {
-                    RoomDetailFragment fragment = RoomDetailFragment.newInstance(room.getId(), room.getName());
-                    getParentFragmentManager()
-                            .beginTransaction()
-                            .replace(R.id.fragment_container, fragment)
-                            .addToBackStack(null)
-                            .commit();
+                RoomAdapter adapter = new RoomAdapter(rooms, new RoomAdapter.OnRoomClickListener() {
+                    @Override
+                    public void onRoomClick(Room room) {
+                        // Mở chi tiết phòng khi click
+                        RoomDetailFragment fragment = RoomDetailFragment.newInstance(room.getId(), room.getName());
+                        getParentFragmentManager()
+                                .beginTransaction()
+                                .replace(R.id.fragment_container, fragment)
+                                .addToBackStack(null)
+                                .commit();
+                    }
+
+                    @Override
+                    public void onRoomLongClick(View view, Room room) {
+                        // Hiện popup menu khi nhấn giữ
+                        PopupMenu popup = new PopupMenu(view.getContext(), view);
+                        popup.getMenuInflater().inflate(R.menu.room_options_menu, popup.getMenu());
+                        popup.setOnMenuItemClickListener(item -> {
+                            if (item.getItemId() == R.id.menu_edit) {
+                                // Gọi sửa phòng
+                                showEditRoomDialog(room);
+                                return true;
+                            } else if (item.getItemId() == R.id.menu_delete) {
+                                deleteRoom(room);
+                                return true;
+                            }
+                            return false;
+                        });
+                        popup.show();
+                    }
                 });
                 recyclerRooms.setAdapter(adapter);
             }
@@ -107,40 +134,121 @@ public class HomeFragment extends Fragment {
             }
         });
     }
+    private void showEditRoomDialog(Room room) {
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_add_room, null);
+
+        TextInputEditText etRoomName = dialogView.findViewById(R.id.etRoomName);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Chỉnh sửa phòng")
+                .setView(dialogView)
+                .setPositiveButton("Xác nhận", (dialog, which) -> {
+                    String tenPhong = etRoomName.getText().toString().trim();
+
+                    if (tenPhong.isEmpty()) {
+                        Toast.makeText(requireContext(),
+                                "Vui lòng điền đủ tất cả thông tin.",
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    executorService.execute(() -> {
+                        boolean success = DatabaseHelper.updateRoom(tenPhong, room.getId());
+
+                        // Sau khi xong, đưa kết quả lên UI Thread
+                        requireActivity().runOnUiThread(() -> {
+                            if (success) {
+                                Toast.makeText(requireContext(),
+                                        "Chỉnh sửa thành công!",
+                                        Toast.LENGTH_SHORT).show();
+                                loadRooms();
+                            } else {
+                                Toast.makeText(requireContext(),
+                                        "Chỉnh sửa thất bại. Vui lòng thử lại.",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    });
+
+                })
+                .setNegativeButton("Hủy", (dialog, which) -> {
+                    dialog.dismiss();
+                })
+                .create()
+                .show();
+    }
+    private void deleteRoom(Room room) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Xác nhận xoá")
+                .setMessage("Bạn có chắc muốn xoá phòng: \"" + room.getName() + "\" không?")
+                .setPositiveButton("Xoá", (dialog, which) -> {
+                    // Thực hiện xoá trên background thread
+                    executorService.execute(() -> {
+                        boolean success = DatabaseHelper.deleteRoom(room.getId());
+
+                        if (isAdded()) {
+                            requireActivity().runOnUiThread(() -> {
+                                if (success) {
+                                    Toast.makeText(requireContext(),
+                                            "Xoá phòng thành công!",
+                                            Toast.LENGTH_SHORT).show();
+                                    loadRooms();
+                                } else {
+                                    Toast.makeText(requireContext(),
+                                            "Xoá phòng thất bại. Vui lòng thử lại.",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                    });
+                })
+                .setNegativeButton("Huỷ", (dialog, which) -> dialog.dismiss())
+                .create()
+                .show();
+    }
 
     private void showAddRoomDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Thêm Phòng Mới");
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_add_room, null);
 
-        final EditText input = new EditText(getContext());
-        input.setHint("Nhập tên phòng");
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
+        TextInputEditText etRoomName = dialogView.findViewById(R.id.etRoomName);
 
-        builder.setPositiveButton("Lưu", (dialog, which) -> {
-            String roomName = input.getText().toString().trim();
-            if (!roomName.isEmpty()) {
-                executorService.execute(() -> {
-                    boolean success = DatabaseHelper.insertRoom(roomName);
-                    if (success) {
-                        new Handler(Looper.getMainLooper()).post(() -> {
-                            Toast.makeText(getContext(), "Thêm phòng thành công", Toast.LENGTH_SHORT).show();
-                            loadRooms(); // Load lại danh sách phòng sau khi thêm
-                        });
-                    } else {
-                        new Handler(Looper.getMainLooper()).post(() -> {
-                            Toast.makeText(getContext(), "Lỗi khi thêm phòng", Toast.LENGTH_SHORT).show();
-                        });
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Thêm phòng mới")
+                .setView(dialogView)
+                .setPositiveButton("Xác nhận", (dialog, which) -> {
+                    String tenPhong = etRoomName.getText().toString().trim();
+
+                    if (tenPhong.isEmpty()) {
+                        Toast.makeText(requireContext(),
+                                "Vui lòng điền đủ tất cả thông tin.",
+                                Toast.LENGTH_SHORT).show();
+                        return;
                     }
-                });
-            } else {
-                Toast.makeText(getContext(), "Tên phòng không được để trống", Toast.LENGTH_SHORT).show();
-            }
-        });
+                    executorService.execute(() -> {
+                        boolean success = DatabaseHelper.insertRoom(tenPhong);
 
-        builder.setNegativeButton("Hủy", (dialog, which) -> dialog.cancel());
+                        // Sau khi xong, đưa kết quả lên UI Thread
+                        requireActivity().runOnUiThread(() -> {
+                            if (success) {
+                                Toast.makeText(requireContext(),
+                                        "Thêm phòng thành công!",
+                                        Toast.LENGTH_SHORT).show();
+                                loadRooms();
+                            } else {
+                                Toast.makeText(requireContext(),
+                                        "Thêm phòng thất bại. Vui lòng thử lại.",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    });
 
-        builder.show();
+                })
+                .setNegativeButton("Hủy", (dialog, which) -> {
+                    dialog.dismiss();
+                })
+                .create()
+                .show();
     }
     private void startSpeechRecognition() {
         if (speechRecognizer == null) {
@@ -160,8 +268,11 @@ public class HomeFragment extends Fragment {
                     ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                     if (matches != null && !matches.isEmpty()) {
                         String spokenText = matches.get(0);
-                        Toast.makeText(getContext(), "Ghi âm: " + spokenText, Toast.LENGTH_LONG).show();
-                        // TODO: Ở đây bạn có thể xử lý logic theo lệnh giọng nói
+                        //Toast.makeText(getContext(), "Ghi âm: " + spokenText, Toast.LENGTH_LONG).show();
+                        // TODO: Xử lí
+                        txtVoiceResult.setText(spokenText);
+
+                        txtVoiceResult.postDelayed(() -> txtVoiceResult.setText("Nói gì đó..."), 5000);
                     }
                 }
                 @Override

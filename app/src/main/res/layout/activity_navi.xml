@@ -20,7 +20,8 @@
             android:background="?attr/colorPrimary"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             android:fitsSystemWindows="true"
-            app:title="Trang chủ" />
+            app:title="Trang chủ"
+            app:menu="@menu/main_menu" />
 
         <!-- Nội dung chính (Fragment container) -->
         <FrameLayout

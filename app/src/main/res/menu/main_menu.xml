@@ -1,0 +1,34 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MenuTitle">
+
+    <item
+        android:id="@+id/action_logout"
+        android:title="Đăng xuất"
+        android:icon="@drawable/ic_logout"
+        app:iconTint="?attr/colorOnPrimary"
+        app:showAsAction="always">
+
+        <menu>
+            <!-- Đăng xuất ứng dụng -->
+            <item
+                android:id="@+id/action_logout_normal"
+                android:title="Đăng xuất ứng dụng"
+                android:icon="@drawable/ic_logout_app"/>
+
+            <!-- Đăng xuất + Xóa dữ liệu -->
+            <item
+                android:id="@+id/action_logout_db"
+                android:title="Đăng xuất database"
+                android:icon="@drawable/ic_logout_db"/>
+
+            <!-- Đăng xuất EZVIZ -->
+            <item
+                android:id="@+id/action_logout_api"
+                android:title="Đăng xuất ezviz"
+                android:icon="@drawable/ic_logout_api"
+                android:tooltipText="Đăng xuất khỏi tất cả thiết bị"/>
+        </menu>
+    </item>
+</menu>

@@ -84,7 +84,7 @@ public class LoginActivity extends AppCompatActivity {
 //                preferences.edit().putString("access_token", accessToken).apply();
 
                 //Chuyển form
-                Intent i = new Intent(LoginActivity.this, NaviActivity.class);
+                Intent i = new Intent(LoginActivity.this, LoginDbActivity.class);
                 startActivity(i);
 
                 finish(); // Đóng login

@@ -1,5 +1,6 @@
 package com.example.smarthomepvl;
 
+import android.app.Activity;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Handler;
@@ -19,15 +20,20 @@ import com.example.smarthomepvl.Device;
 
 
 public class DatabaseHelper {
-    private static final String URL = "jdbc:mysql://pvl.vn:3306/admin_db";
-    private static final String USER = "raspberry";
-    private static final String PASSWORD = "admin6789@";
+    private static String URL = "jdbc:mysql://pvl.vn:3306/admin_db";
+    private static String USER = "raspberry";
+    private static String PASSWORD = "admin6789@";
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private final Context context;
 
     public DatabaseHelper(Context context) {
         this.context = context;
+    }
+    public static void updateConnectionInfo(String dbName, String user, String pass) {
+        URL = "jdbc:mysql://pvl.vn:3306/" + dbName + "?useSSL=false&serverTimezone=UTC";
+        USER = user;
+        PASSWORD = pass;
     }
 
     public void close() {
@@ -44,7 +50,25 @@ public class DatabaseHelper {
         }
         return conn;
     }
+    public void checkLoginDB(String dbName, String username, String password, LoginCallback callback) {
+        executorService.execute(() -> {
+            String dynamicUrl = "jdbc:mysql://pvl.vn:3306/" + dbName + "?useSSL=false&serverTimezone=UTC";
 
+            try (Connection testConn = DriverManager.getConnection(dynamicUrl, username, password)) {
+                // Nếu kết nối thành công, cập nhật biến static
+                updateConnectionInfo(dbName, username, password);
+
+                ((Activity) context).runOnUiThread(() -> {
+                    callback.onResult(true);
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                ((Activity) context).runOnUiThread(() -> {
+                    callback.onResult(false);
+                });
+            }
+        });
+    }
 
     public static boolean insertUser(String username, String password, String email, String phone) {
         String query = "INSERT INTO smarthome_accounts (TaiKhoan, MatKhau, Email, SoDienThoai) VALUES (?, ?, ?, ?)";
@@ -131,8 +155,6 @@ public class DatabaseHelper {
         if (name.contains("bếp")) return R.drawable.ic_kitchen;
         return R.drawable.ic_room;
     }
-
-
     public static boolean insertRoom(String TenPhong) {
         String query = "INSERT INTO smarthome_rooms (TenPhong) VALUES (?)";
         try (Connection connection = connect();
@@ -142,6 +164,37 @@ public class DatabaseHelper {
 
             int rowsInserted = ps.executeUpdate();
             return rowsInserted > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    public static boolean updateRoom(String name, int IDPhong) {
+        String query = "UPDATE smarthome_rooms SET TenPhong = ? WHERE IDPhong = ?";
+        try (Connection connection = connect();
+             PreparedStatement ps = connection.prepareStatement(query)) {
+
+            ps.setString(1, name);
+            ps.setInt(2, IDPhong);
+
+            int rowsUpdated = ps.executeUpdate();
+            return rowsUpdated > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    public static boolean deleteRoom(int IDPhong) {
+        String query = "DELETE FROM smarthome_rooms WHERE IDPhong = ?";
+        try (Connection connection = connect();
+             PreparedStatement ps = connection.prepareStatement(query)) {
+
+            ps.setInt(1, IDPhong);
+
+            int rowsUpdated = ps.executeUpdate();
+            return rowsUpdated > 0;
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -203,7 +256,7 @@ public class DatabaseHelper {
             }
         });
     }
-    public static boolean insertCamera(String DiaChiMAC, String TenThietBi) {
+    public static boolean insertCamera(String DiaChiMAC, String TenThietBi, int IDPhong) {
         String query = "INSERT INTO smarthome_device (DiaChiMAC, TenThietBi, LoaiThietBi, IDPhong) VALUES (?,?,?,?)";
         try (Connection connection = connect();
              PreparedStatement ps = connection.prepareStatement(query)) {
@@ -211,7 +264,7 @@ public class DatabaseHelper {
             ps.setString(1, DiaChiMAC);
             ps.setString(2, TenThietBi);
             ps.setInt(3, 0);
-            ps.setInt(4, 9);
+            ps.setInt(4, IDPhong);
 
 
             int rowsInserted = ps.executeUpdate();
@@ -222,7 +275,6 @@ public class DatabaseHelper {
             return false;
         }
     }
-
     public static boolean updateCamera(String DiaChiMAC, String TenThietBi, int ID) {
         String query = "UPDATE smarthome_device SET DiaChiMAC = ?, TenThietBi = ? WHERE ID = ?";
         try (Connection connection = connect();
@@ -249,6 +301,26 @@ public class DatabaseHelper {
 
             int rowsUpdated = ps.executeUpdate();
             return rowsUpdated > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean insertDevice(String DiaChiMAC, String TenThietBi, int IDPhong) {
+        String query = "INSERT INTO smarthome_device (DiaChiMAC, TenThietBi, LoaiThietBi, IDPhong) VALUES (?,?,?,?)";
+        try (Connection connection = connect();
+             PreparedStatement ps = connection.prepareStatement(query)) {
+
+            ps.setString(1, DiaChiMAC);
+            ps.setString(2, TenThietBi);
+            ps.setInt(3, 1);
+            ps.setInt(4, IDPhong);
+
+
+            int rowsInserted = ps.executeUpdate();
+            return rowsInserted > 0;
 
         } catch (Exception e) {
             e.printStackTrace();

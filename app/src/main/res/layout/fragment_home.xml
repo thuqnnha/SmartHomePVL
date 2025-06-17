@@ -3,45 +3,74 @@
     android:id="@+id/homeFragmentLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="@color/bgSoftBlue">
 
-    <!-- Nút micro ở góc trên bên phải -->
-    <ImageButton
-        android:id="@+id/btnMicro"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_margin="16dp"
-        android:background="@drawable/btn_micro_background"
-        android:contentDescription="Voice Control"
-        android:padding="12dp"
-        android:src="@drawable/ic_mic_on"
-        android:elevation="6dp"
-        app:tint="@android:color/white" />
-
-    <!-- Danh sách phòng (RecyclerView) -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerRooms"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-        app:spanCount="2"
-        android:layout_below="@id/btnMicro"
-        android:layout_marginTop="8dp"
-        android:clipToPadding="false"
-        android:paddingBottom="100dp" />
-
-    <!-- Nút thêm phòng ở góc dưới bên phải -->
+    <!-- Nút thêm phòng (FloatingActionButton) ở góc trên bên phải -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btnAddRoom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_margin="16dp"
         android:contentDescription="Thêm phòng"
         android:src="@drawable/ic_add"
         app:tint="@android:color/white"
         app:backgroundTint="@color/colorPrimary" />
+
+    <!-- Danh sách phòng (RecyclerView) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerRooms"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/btnAddRoom"
+        android:layout_marginTop="8dp"
+        android:clipToPadding="false"
+        android:paddingHorizontal="0dp"
+        android:paddingBottom="80dp"
+        android:background="@android:color/transparent"
+        android:scrollbars="vertical"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+
+    <!-- Nhóm TextView và nút micro căn giữa ở đáy màn hình -->
+    <LinearLayout
+        android:id="@+id/voiceControlLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="16dp"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal|center_vertical">
+
+        <!-- TextView kết quả giọng nói co giãn theo màn hình -->
+        <TextView
+            android:id="@+id/txtVoiceResult"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_voice_result"
+            android:padding="10dp"
+            android:text="Nói gì đó..."
+            android:textSize="18sp"
+            android:textColor="@android:color/black"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <!-- Nút micro ở bên phải -->
+        <ImageButton
+            android:id="@+id/btnMicro"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/btn_micro_background"
+            android:contentDescription="Voice Control"
+            android:padding="12dp"
+            android:src="@drawable/ic_mic_on"
+            android:elevation="6dp"
+            app:tint="@android:color/white" />
+    </LinearLayout>
+
+
+
 </RelativeLayout>
