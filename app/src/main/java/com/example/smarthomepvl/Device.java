@@ -6,6 +6,16 @@ public class Device implements Serializable{
     private String diaChiMAC;
     private String tenThietBi;
     private int loaiThietBi;
+    private ChartEntry latestEntry;
+
+    public ChartEntry getLatestEntry() {
+        return latestEntry;
+    }
+
+    public void setLatestEntry(ChartEntry latestEntry) {
+        this.latestEntry = latestEntry;
+    }
+
 
     // Constructor
     public Device(int id, String diaChiMAC, String tenThietBi,int loaiThietBi) {

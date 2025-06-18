@@ -14,4 +14,11 @@
     <color name="textPrimary">#212121</color>
     <color name="textSecondary">#757575</color>
 
+    <color name="voltage_accent">#4CAF50</color>
+    <color name="current_accent">#2196F3</color>
+    <color name="temperature_accent">#FF5722</color>
+
+    <color name="neutral_95">#F5F5F5</color>
+
+
 </resources>

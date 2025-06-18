@@ -38,9 +38,12 @@ import com.videogo.openapi.EZPlayer;
 import com.videogo.openapi.bean.EZAccessToken;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class RoomDetailFragment extends Fragment {
 
@@ -55,6 +58,11 @@ public class RoomDetailFragment extends Fragment {
     private TextView txtDeviceTitle;
     private FloatingActionButton fabAddDevice;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private Handler handler = new Handler();
+    private Runnable updateRunnable;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+
 
     public RoomDetailFragment() {}
     public interface DeviceCallback {
@@ -93,6 +101,7 @@ public class RoomDetailFragment extends Fragment {
         txtCameraTitle = view.findViewById(R.id.txtCameraTitle);
         txtDeviceTitle = view.findViewById(R.id.txtDeviceTitle);
         fabAddDevice = view.findViewById(R.id.fabAddDevice);
+
 
         recyclerDevices.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -324,9 +333,29 @@ public class RoomDetailFragment extends Fragment {
                             });
                             popup.show();
                         }
+
+                        @Override
+                        public void onDeviceClick(Device device) {
+                            // Mở ChartDeviceFragment khi click
+                            Bundle bundle = new Bundle();
+                            bundle.putSerializable("device", device); // đảm bảo Device implements Serializable
+
+                            ChartDeviceFragment fragment = new ChartDeviceFragment();
+                            fragment.setArguments(bundle);
+
+                            requireActivity().getSupportFragmentManager()
+                                    .beginTransaction()
+                                    .add(R.id.fragment_container, fragment)
+                                    .hide(RoomDetailFragment.this)
+                                    .addToBackStack(null)
+                                    .commit();
+                        }
                     });
 
                     recyclerDevices.setAdapter(deviceAdapter);
+
+                    //cap nhat
+                    startUpdatingDeviceStatus(otherDevices, deviceAdapter);
 
                 });
             }
@@ -504,6 +533,41 @@ public class RoomDetailFragment extends Fragment {
                 .setNegativeButton("Huỷ", (dialog, which) -> dialog.dismiss())
                 .create()
                 .show();
+    }
+    private void startUpdatingDeviceStatus(List<Device> deviceList, DeviceAdapter adapter) {
+        updateRunnable = new Runnable() {
+            public void run() {
+                executor.execute(() -> {
+                    for (Device device : deviceList) {
+                        List<ChartEntry> entries = DatabaseHelper.loadChartData(
+                                device.getDiaChiMAC() + "_online",
+                                new Date(System.currentTimeMillis() - 10_000)
+                        );
+
+                        if (!entries.isEmpty()) {
+                            ChartEntry latest = entries.get(entries.size() - 1);
+
+                            // Cập nhật giao diện trên UI thread
+                            mainHandler.post(() -> {
+                                Log.d("ChartEntryDebug", "MAC: " + device.getDiaChiMAC() + " => Entries: " + entries.size());
+                                adapter.updateDeviceStatus(device.getDiaChiMAC(), latest);
+                            });
+                        }
+                    }
+
+                    // Gọi lại sau 1 giây
+                    mainHandler.postDelayed(this, 1000);
+                });
+            }
+        };
+
+        handler.post(updateRunnable);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        handler.removeCallbacks(updateRunnable); // tránh leak khi thoát fragment
     }
 
 }

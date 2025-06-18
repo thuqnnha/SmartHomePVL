@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -12,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -229,6 +231,7 @@ public class DatabaseHelper {
             }
         });
     }
+
     public void loadCameraList(CameraFragment.DeviceCallback callback) {
         executorService.execute(() -> {
             String query = "SELECT ID, DiaChiMAC, TenThietBi, LoaiThietBi FROM smarthome_device WHERE LoaiThietBi = 0";
@@ -327,7 +330,39 @@ public class DatabaseHelper {
             return false;
         }
     }
+    public static List<ChartEntry> loadChartData(String MACID, Date startTime) {
+        List<ChartEntry> chartList = new ArrayList<>();
+        String query = "SELECT DateTime, TimeOn, TimeOff, Status, Current, Voltage, Temperature FROM " + MACID + " WHERE DateTime >= ? ORDER BY DateTime ASC";
+        Log.d("ChartEntryDebug", query);
+        try (Connection conn = connect();
+             PreparedStatement ps = conn.prepareStatement(query)) {
 
+            ps.setTimestamp(1, new java.sql.Timestamp(startTime.getTime()));
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                String timeOn = rs.getTime("TimeOn").toString();   // Định dạng sẵn là HH:mm:ss
+                String timeOff = rs.getTime("TimeOff").toString();
+
+                ChartEntry entry = new ChartEntry(
+                        rs.getTimestamp("DateTime"),      // Dạng java.util.Date
+                        timeOn,
+                        timeOff,
+                        rs.getString("Status"),
+                        rs.getFloat("Current"),
+                        rs.getFloat("Voltage"),
+                        rs.getFloat("Temperature")
+                );
+
+                chartList.add(entry);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return chartList;
+    }
 
     public static boolean updateData(String maKho, String maVatTu, String tenVatTu, String donViTinh,
                                      String viTri, String soLuongNhap, String giaTien) {
