@@ -3,6 +3,7 @@ package com.example.smarthomepvl;
 import android.graphics.Color;
 import android.os.Bundle;
 
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import android.os.Handler;
@@ -14,11 +15,14 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.LimitLine;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.ValueFormatter;
+import com.github.mikephil.charting.utils.ColorTemplate;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -32,12 +36,11 @@ import java.util.concurrent.TimeUnit;
 public class ChartDeviceFragment extends Fragment {
     private TextView voltageValue, currentValue, temperatureValue;
     private LineChart voltageChart, currentChart, temperatureChart;
-    private ScheduledExecutorService executorService;
-    private final Handler handler = new Handler(Looper.getMainLooper());
-    private volatile boolean isUpdating = false;
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable updateRunnable;
     private Date lastUpdateTime = new Date(0);
     private String macId = null;
-
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
 
     public ChartDeviceFragment() {
@@ -71,182 +74,161 @@ public class ChartDeviceFragment extends Fragment {
         currentChart = view.findViewById(R.id.currentChart);
         temperatureChart = view.findViewById(R.id.temperatureChart);
 
-        configureChart(voltageChart);
-        configureChart(currentChart);
-        configureChart(temperatureChart);
+        // Bắt đầu cập nhật
+        updateChartsPeriodically(macId, lastUpdateTime);
 
 
         return view;
     }
-    private void configureChart(LineChart chart) {
-//        chart.getDescription().setEnabled(false);
-//        chart.getLegend().setEnabled(false);
-//        chart.getAxisRight().setEnabled(false);
-//
-//        XAxis xAxis = chart.getXAxis();
-//        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-//        xAxis.setGranularity(1f);
-//        xAxis.setDrawGridLines(false);
-//
-//        YAxis leftAxis = chart.getAxisLeft();
-////        leftAxis.setGranularity(1f);
-//        leftAxis.setGranularity(0.01f);
+    private void updateChartsPeriodically(String macId, Date startTime) {
+        updateRunnable = new Runnable() {
+            @Override
+            public void run() {
+                executor.execute(() -> {
+                    // Chạy trong background thread
+                    List<ChartEntry> data = DatabaseHelper.loadChartData(macId, startTime);
 
+                    if (data != null && !data.isEmpty()) {
+                        ChartEntry latest = data.get(data.size() - 1);
+
+                        // Cập nhật giao diện trong UI thread
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            if (!isAdded()) return;
+
+                            voltageValue.setText(String.format(Locale.getDefault(), "%.2f V", latest.getVoltage()));
+                            currentValue.setText(String.format(Locale.getDefault(), "%.2f A", latest.getCurrent()));
+                            temperatureValue.setText(String.format(Locale.getDefault(), "%.2f °C", latest.getTemperature()));
+
+                            updateLineChart(voltageChart, data, "voltage");
+                            updateLineChart(currentChart, data, "current");
+                            updateLineChart(temperatureChart, data, "temperature");
+                        });
+                    }
+
+                    // Gọi lại chính mình sau 1 giây
+                    handler.postDelayed(this, 1000);
+                });
+            }
+        };
+
+        handler.post(updateRunnable);
+    }
+    private void updateLineChart(LineChart chart, List<ChartEntry> data, String type) {
+        List<Entry> entries = new ArrayList<>();
+
+        int dataSize = data.size();
+        int startIndex = Math.max(0, dataSize - 100);
+
+        for (int i = startIndex; i < dataSize; i++) {
+            float value = 0f;
+            switch (type) {
+                case "voltage": value = data.get(i).getVoltage(); break;
+                case "current": value = data.get(i).getCurrent(); break;
+                case "temperature": value = data.get(i).getTemperature(); break;
+            }
+            entries.add(new Entry(i- startIndex, value));
+        }
+
+        LineDataSet dataSet = new LineDataSet(entries, type.toUpperCase());
+        dataSet.setDrawCircles(false);
+        dataSet.setLineWidth(1f);
+        dataSet.setDrawValues(false);
+        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+
+        //Đổi màu line tùy theo loại dữ liệu
+        int color = R.color.voltage_accent;
+        switch (type) {
+            case "voltage": color = R.color.voltage_accent; break;
+            case "current": color = R.color.current_accent; break;
+            case "temperature": color = R.color.temperature_accent; break;
+        }
+
+        if (getContext() == null) return;
+        int resolvedColor = ContextCompat.getColor(requireContext(), color);
+        dataSet.setColor(resolvedColor);
+
+        //Tô nền dưới line (tuỳ chọn)
+        dataSet.setDrawFilled(true);
+        dataSet.setFillAlpha(100);
+        //dataSet.setFillColor(resolvedColor);
+
+        LineData lineData = new LineData(dataSet);
+        chart.setData(lineData);
+
+        //Cấu hình chart hiển thị
         chart.getDescription().setEnabled(false);
         chart.getLegend().setEnabled(false);
         chart.getAxisRight().setEnabled(false);
+        chart.setTouchEnabled(false);
 
-        // Màu nền và bo tròn viền
-        //chart.setBackgroundColor(Color.parseColor("#FAFAFA")); // Màu sáng
-        chart.setExtraOffsets(10, 10, 10, 10);
-
+        //Trục X xuống dưới
         XAxis xAxis = chart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setGranularity(1f);
+        xAxis.setDrawLabels(false);
         xAxis.setDrawGridLines(false);
-        xAxis.setTextSize(12f);
-        xAxis.setTextColor(Color.DKGRAY);
+        xAxis.setAxisMinimum(-1f);
+        xAxis.setAxisLineWidth(1f);
 
-        YAxis leftAxis = chart.getAxisLeft();
-        leftAxis.setGranularity(0.01f);
-        leftAxis.setTextColor(Color.DKGRAY);
-        leftAxis.setDrawGridLines(true);
-        leftAxis.setGridColor(Color.LTGRAY);
+        //Trục Y trái
+        YAxis yAxis = chart.getAxisLeft();
+        yAxis.setDrawGridLines(false);
+        yAxis.setAxisLineWidth(1f);
+        yAxis.setTextColor(Color.BLACK);
+
+        yAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return String.format(Locale.getDefault(), "%.2f", value);
+            }
+        });
+
+        //Giá trị cuối cùng trong biểu đồ
+        float latestValue = entries.get(entries.size() - 1).getY();
+
+        //LimitLine không có label, chỉ là đường ngang
+        LimitLine limitLine = new LimitLine(latestValue);
+        limitLine.setLineColor(resolvedColor);      // Màu theo từng loại dữ liệu
+        limitLine.setLineWidth(1.2f);               // Độ dày đường
+        limitLine.setLabel("");                     // Không hiện label
+        // Tuỳ chọn: nét đứt cho đẹp
+        limitLine.enableDashedLine(8f, 4f, 0f);      // Đường gạch gạch (tuỳ thích)
+
+        //YAxis yAxis = chart.getAxisLeft();
+        yAxis.removeAllLimitLines(); // Xoá cũ để tránh chồng
+        yAxis.addLimitLine(limitLine); // Thêm mới đường ngang
+
+        chart.setExtraBottomOffset(10f);
+        chart.invalidate();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if (macId != null) {
-            startChartDataUpdater(macId);
+        if (updateRunnable != null) {
+            handler.post(updateRunnable); // Tiếp tục cập nhật nếu bị tạm dừng trước đó
         } else {
-            Log.e("ChartDeviceFragment", "MAC ID is null");
+            updateChartsPeriodically(macId, lastUpdateTime);
         }
     }
-
     @Override
     public void onPause() {
         super.onPause();
-        stopChartDataUpdater();
-    }
-
-    private void startChartDataUpdater(String macId) {
-        isUpdating = true;
-        executorService = Executors.newSingleThreadScheduledExecutor();
-
-        executorService.scheduleWithFixedDelay(() -> {
-            try {
-                if (!isUpdating) return;
-
-                Date currentTime = new Date();
-                List<ChartEntry> chartData = DatabaseHelper.loadChartData(macId, lastUpdateTime);
-                lastUpdateTime = currentTime;
-
-                if (!chartData.isEmpty()) {
-                    handler.post(() -> {
-                        try {
-                            updateUI(chartData);
-                        } catch (Exception e) {
-                            Log.e("ChartUpdate", "Error updating UI", e);
-                        }
-                    });
-                }
-            } catch (Exception e) {
-                Log.e("ChartUpdate", "Error fetching data", e);
-            }
-        }, 0, 2, TimeUnit.SECONDS);
-    }
-
-    private void updateUI(List<ChartEntry> chartData) {
-        ChartEntry latest = chartData.get(chartData.size() - 1);
-
-        voltageValue.setText(String.format(Locale.getDefault(), "%.2fV", latest.getVoltage()));
-        currentValue.setText(String.format(Locale.getDefault(), "%.2fA", latest.getCurrent()));
-        temperatureValue.setText(String.format(Locale.getDefault(), "%.2f°C", latest.getTemperature()));
-
-        updateChart(voltageChart, chartData, "voltage");
-        updateChart(currentChart, chartData, "current");
-        updateChart(temperatureChart, chartData, "temperature");
-    }
-
-    private void updateChart(LineChart chart, List<ChartEntry> entries, String type) {
-        LineData data = chart.getData();
-        LineDataSet dataSet;
-
-        if (data == null) {
-//            dataSet = new LineDataSet(new ArrayList<>(), type);
-//            dataSet.setDrawValues(false);
-//            dataSet.setDrawCircles(true);
-//            dataSet.setCircleRadius(3f);
-//            dataSet.setLineWidth(2f);
-//            //data = new LineData(dataSet);
-//            //chart.setData(data);
-
-            dataSet = new LineDataSet(new ArrayList<>(), type);
-            dataSet.setDrawValues(false);
-            dataSet.setDrawCircles(true);
-            dataSet.setCircleRadius(3f);
-            dataSet.setLineWidth(2f);
-            dataSet.setDrawHighlightIndicators(true);
-            dataSet.setHighLightColor(Color.RED);
-            dataSet.setColor(getColorForType(type));
-            dataSet.setCircleColor(getColorForType(type));
-            
-            chart.setDrawMarkers(true);
-            dataSet.setDrawHighlightIndicators(true);
-            dataSet.setHighLightColor(Color.RED);
-
-            data = new LineData(dataSet);
-            chart.setData(data);
-
-            chart.setDrawMarkers(true);
-        } else {
-            dataSet = (LineDataSet) data.getDataSetByIndex(0);
-        }
-
-        // Thêm các điểm mới
-        int startIndex = dataSet.getEntryCount();
-        for (int i = 0; i < entries.size(); i++) {
-            float value;
-            switch (type) {
-                case "voltage": value = entries.get(i).getVoltage(); break;
-                case "current": value = entries.get(i).getCurrent(); break;
-                case "temperature": value = entries.get(i).getTemperature(); break;
-                default: return;
-            }
-            data.addEntry(new Entry(startIndex + i, value), 0);
-        }
-
-        // Giới hạn số điểm hiển thị
-        if (dataSet.getEntryCount() > 50) {
-            int removeCount = dataSet.getEntryCount() - 50;
-            for (int i = 0; i < removeCount; i++) {
-                dataSet.removeFirst();
-                //dataSet.removeEntry(0);
-            }
-        }
-
-        chart.notifyDataSetChanged();
-        chart.invalidate();
-        chart.animateX(500); // hiệu ứng trượt mượt
-        chart.moveViewToX(data.getXMax());
-    }
-
-    private void stopChartDataUpdater() {
-        isUpdating = false;
-        if (executorService != null) {
-            executorService.shutdownNow();
-            executorService = null;
-        }
-        handler.removeCallbacksAndMessages(null);
-    }
-    private int getColorForType(String type) {
-        switch (type) {
-            case "voltage": return Color.parseColor("#4CAF50");   // Xanh lá
-            case "current": return Color.parseColor("#2196F3");   // Xanh dương
-            case "temperature": return Color.parseColor("#F44336"); // Đỏ
-            default: return Color.BLACK;
+        if (handler != null && updateRunnable != null) {
+            handler.removeCallbacks(updateRunnable); // Tạm dừng cập nhật
         }
     }
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (handler != null && updateRunnable != null) {
+            handler.removeCallbacks(updateRunnable); // Dừng hẳn cập nhật
+        }
+        executor.shutdownNow(); // Dọn executor
+    }
+
+
+
+
+
 
 }

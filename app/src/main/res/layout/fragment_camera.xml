@@ -5,7 +5,7 @@
     android:id="@+id/mainLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F7FA"
+    android:background="@color/bgSoftBlue"
     tools:context=".CameraFragment">
 
     <!-- Thanh điều khiển trên cùng -->
@@ -15,126 +15,129 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:background="#FFFFFF"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="12dp"
         android:orientation="horizontal"
-        android:elevation="4dp">
-
-        <Spinner
-            android:id="@+id/spinnerCameraList"
-            android:layout_width="0dp"
-            android:layout_height="30dp"
-            android:layout_weight="1"
-            android:background="@drawable/spinner_background"
-            android:popupBackground="#FFFFFF"
-            android:spinnerMode="dropdown"
-            android:paddingStart="12dp"
-            android:paddingEnd="32dp"
-            android:textSize="14sp"
-            android:popupElevation="8dp"
-            android:layout_gravity="center_vertical" />
+        android:elevation="4dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:gravity="end"
-            android:layout_marginStart="16dp">
-
-            <TextView
-                android:id="@+id/tvDateTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="01/06/2025 14:30"
-                android:textColor="#718096"
-                android:textSize="12sp"
-                android:gravity="end"/>
+            android:layout_marginStart="16dp"
+            android:gravity="end">
 
             <TextView
                 android:id="@+id/tvStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="● Đang kiểm tra..."
-                android:textSize="12sp"
+                android:text="● Online"
+                android:textSize="15sp"
+                android:textColor="#32CD32"
                 android:layout_marginTop="4dp"
-                android:gravity="end"/>
+                android:gravity="end" />
         </LinearLayout>
-    </LinearLayout>
-
-    <!-- Thanh công cụ Thêm/Sửa/Xoá -->
-    <LinearLayout
-        android:id="@+id/editToolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/topBar"
-        android:background="#EDF2F7"
-        android:paddingVertical="8dp"
-        android:orientation="horizontal"
-        android:gravity="end">
-
-        <ImageButton
-            android:id="@+id/btnSettings"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Cài đặt"
-            android:src="@drawable/ic_setting"
-            app:tint="#4A5568"
-            android:layout_marginHorizontal="8dp"/>
-
-        <ImageButton
-            android:id="@+id/btnAdd"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@drawable/ic_add"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Thêm"
-            app:tint="#4299E1"
-            android:layout_marginHorizontal="8dp"/>
-
-        <ImageButton
-            android:id="@+id/btnEdit"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@drawable/ic_edit"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Sửa"
-            app:tint="#4299E1"
-            android:layout_marginHorizontal="8dp"/>
-
-        <ImageButton
-            android:id="@+id/btnDelete"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@drawable/ic_delete"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Xoá"
-            app:tint="#E53E3E"
-            android:layout_marginHorizontal="8dp"/>
     </LinearLayout>
 
     <!-- Khung hiển thị camera -->
     <FrameLayout
         android:id="@+id/cameraFrame"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/editToolbar"
-        android:layout_above="@+id/ptzPanel"
+        android:layout_height="250dp"
+        android:layout_below="@id/topBar"
         android:padding="8dp">
 
+        <!-- SurfaceView nằm dưới -->
         <SurfaceView
             android:id="@+id/surfaceView"
             android:layout_width="match_parent"
-            android:layout_height="250dp"
-            android:layout_gravity="center"/>
+            android:layout_height="match_parent"
+            android:layout_marginTop="10dp" />
+
+        <!-- Layout chứa các nút điều khiển nằm đè lên -->
+        <RelativeLayout
+            android:id="@+id/buttonPanel"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="5dp"
+            android:visibility="gone">
+
+            <!-- Nhóm nút góc trái dưới -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentStart="true"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageButton
+                    android:id="@+id/btnPause"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/ic_play"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Tạm dừng"
+                    android:padding="6dp"
+                    app:tint="#000000" />
+
+                <ImageButton
+                    android:id="@+id/btnSound"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/ic_sound_off"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Âm thanh"
+                    android:padding="6dp"
+                    android:layout_marginStart="8dp"
+                    app:tint="#000000" />
+
+                <ImageButton
+                    android:id="@+id/btnPTZ"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/ic_ptz"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Điều hướng PTZ"
+                    android:padding="6dp"
+                    android:layout_marginStart="8dp"
+                    app:tint="#000000" />
+
+                <ImageButton
+                    android:id="@+id/btnMic"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/ic_mic_off"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Mic"
+                    android:padding="6dp"
+                    android:layout_marginStart="8dp"
+                    app:tint="#000000" />
+            </LinearLayout>
+
+            <!-- Nút Toàn màn hình góc phải dưới -->
+            <ImageButton
+                android:id="@+id/btnFullScreen"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true"
+                android:src="@drawable/ic_fullscreen"
+                android:background="@android:color/transparent"
+                android:contentDescription="Toàn màn hình"
+                android:padding="6dp"
+                app:tint="#000000" />
+        </RelativeLayout>
     </FrameLayout>
 
-    <!-- Panel PTZ (điều hướng camera) -->
+
+    <!-- Panel PTZ -->
     <RelativeLayout
         android:id="@+id/ptzPanel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@id/bottomNavigation"
+        android:layout_above="@id/horizontalNav"
+        android:visibility="gone"
         android:padding="24dp">
 
         <ImageButton
@@ -181,17 +184,268 @@
             app:tint="#4A5568" />
     </RelativeLayout>
 
-    <!-- Menu điều khiển dưới cùng -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigation"
+    <HorizontalScrollView
+        android:id="@+id/horizontalNav"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="80dp"
         android:layout_alignParentBottom="true"
-        android:background="#FFFFFF"
-        android:paddingTop="8dp"
-        android:elevation="8dp"
-        app:itemIconTint="@color/nav_icon_color"
-        app:itemTextColor="@color/nav_icon_color"
-        app:labelVisibilityMode="labeled"
-        app:menu="@menu/bottom_nav_menu" />
+        android:background="@drawable/nav_background"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:elevation="8dp">
+
+        <LinearLayout
+            android:id="@+id/navLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="8dp">
+
+            <!-- Nút Chụp màn hình -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="72dp"
+                android:layout_height="64dp"
+                android:layout_marginHorizontal="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeColor="#E2E8F0"
+                app:strokeWidth="0.5dp"
+                android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                <LinearLayout
+                    android:id="@+id/btnCapture"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:paddingVertical="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_camera"
+                        android:contentDescription="Chụp"
+                        app:tint="#4A5568" />
+
+                    <TextView
+                        android:text="Chụp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#4A5568"
+                        android:textSize="12sp"
+                        android:layout_marginTop="4dp"
+                        android:fontFamily="sans-serif-medium"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Nút Ghi hình -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="72dp"
+                android:layout_height="64dp"
+                android:layout_marginHorizontal="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeColor="#E2E8F0"
+                app:strokeWidth="0.5dp"
+                android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                <LinearLayout
+                    android:id="@+id/btnRecord"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:paddingVertical="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <ImageView
+                        android:id="@+id/imgRecord"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_videocam_off"
+                        android:contentDescription="Ghi"
+                        app:tint="#4A5568" />
+
+                    <TextView
+                        android:text="Ghi"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#4A5568"
+                        android:textSize="12sp"
+                        android:layout_marginTop="4dp"
+                        android:fontFamily="sans-serif-medium"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Nút PTZ -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="72dp"
+                android:layout_height="64dp"
+                android:layout_marginHorizontal="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeColor="#E2E8F0"
+                app:strokeWidth="0.5dp"
+                android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                <LinearLayout
+                    android:id="@+id/btnPTZControl"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:paddingVertical="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_ptz"
+                        android:contentDescription="PTZ"
+                        app:tint="#4A5568" />
+
+                    <TextView
+                        android:text="PTZ"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#4A5568"
+                        android:textSize="12sp"
+                        android:layout_marginTop="4dp"
+                        android:fontFamily="sans-serif-medium"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Nút Âm thanh -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="72dp"
+                android:layout_height="64dp"
+                android:layout_marginHorizontal="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeColor="#E2E8F0"
+                app:strokeWidth="0.5dp"
+                android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                <LinearLayout
+                    android:id="@+id/btnAudio"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:paddingVertical="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <ImageView
+                        android:id="@+id/imgAudio"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_mic_off"
+                        android:contentDescription="Âm thanh"
+                        app:tint="#4A5568" />
+
+                    <TextView
+                        android:text="Đàm thoại"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#4A5568"
+                        android:textSize="12sp"
+                        android:layout_marginTop="4dp"
+                        android:fontFamily="sans-serif-medium"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Nút Lật ảnh -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="72dp"
+                android:layout_height="64dp"
+                android:layout_marginHorizontal="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeColor="#E2E8F0"
+                app:strokeWidth="0.5dp"
+                android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                <LinearLayout
+                    android:id="@+id/btnFlip"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:paddingVertical="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_flip"
+                        android:contentDescription="PTZ"
+                        app:tint="#4A5568" />
+
+                    <TextView
+                        android:text="Lật ảnh"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#4A5568"
+                        android:textSize="12sp"
+                        android:layout_marginTop="4dp"
+                        android:fontFamily="sans-serif-medium"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Nút Setting -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="72dp"
+                android:layout_height="64dp"
+                android:layout_marginHorizontal="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeColor="#E2E8F0"
+                app:strokeWidth="0.5dp"
+                android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                <LinearLayout
+                    android:id="@+id/btnSetting"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:paddingVertical="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_setting"
+                        android:contentDescription="Setting"
+                        app:tint="#4A5568" />
+
+                    <TextView
+                        android:text="Cài đặt"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#4A5568"
+                        android:textSize="12sp"
+                        android:layout_marginTop="4dp"
+                        android:fontFamily="sans-serif-medium"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </HorizontalScrollView>
+
+
 </RelativeLayout>

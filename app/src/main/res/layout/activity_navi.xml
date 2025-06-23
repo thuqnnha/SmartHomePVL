@@ -7,6 +7,7 @@
 
     <!-- Nội dung có Toolbar + FrameLayout -->
     <LinearLayout
+        android:id="@+id/main_content_container"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -21,13 +22,14 @@
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             android:fitsSystemWindows="true"
             app:title="Trang chủ"
-            app:menu="@menu/main_menu" />
+            app:menu="@menu/main_menu"
+            />
 
         <!-- Nội dung chính (Fragment container) -->
         <FrameLayout
             android:id="@+id/fragment_container"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:fitsSystemWindows="true" />
     </LinearLayout>

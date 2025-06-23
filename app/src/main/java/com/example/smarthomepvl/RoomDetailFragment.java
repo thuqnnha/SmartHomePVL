@@ -27,6 +27,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -337,18 +339,41 @@ public class RoomDetailFragment extends Fragment {
                         @Override
                         public void onDeviceClick(Device device) {
                             // Mở ChartDeviceFragment khi click
-                            Bundle bundle = new Bundle();
-                            bundle.putSerializable("device", device); // đảm bảo Device implements Serializable
+//                            Bundle bundle = new Bundle();
+//                            bundle.putSerializable("device", device); // đảm bảo Device implements Serializable
+//
+//                            ChartDeviceFragment fragment = new ChartDeviceFragment();
+//                            fragment.setArguments(bundle);
+//
+//                            requireActivity().getSupportFragmentManager()
+//                                    .beginTransaction()
+//                                    .add(R.id.fragment_container, fragment)
+//                                    .hide(RoomDetailFragment.this)
+//                                    .addToBackStack(null)
+//                                    .commit();
 
-                            ChartDeviceFragment fragment = new ChartDeviceFragment();
-                            fragment.setArguments(bundle);
+                            FragmentManager fm = requireActivity().getSupportFragmentManager();
+                            FragmentTransaction ft = fm.beginTransaction();
 
-                            requireActivity().getSupportFragmentManager()
-                                    .beginTransaction()
-                                    .add(R.id.fragment_container, fragment)
-                                    .hide(RoomDetailFragment.this)
-                                    .addToBackStack(null)
-                                    .commit();
+                            // Tìm fragment đã được add trước đó
+                            Fragment oldFragment = fm.findFragmentByTag("ChartFragment");
+                            if (oldFragment != null) {
+                                ft.show(oldFragment);  // Đã tồn tại → hiển thị lại
+                            } else {
+                                // Chưa có → tạo mới và add
+                                Bundle bundle = new Bundle();
+                                bundle.putSerializable("device", device);
+
+                                ChartDeviceFragment chartFragment = new ChartDeviceFragment();
+                                chartFragment.setArguments(bundle);
+
+                                ft.add(R.id.fragment_container, chartFragment, "ChartFragment"); // gán tag để lần sau reuse
+                            }
+
+                            // Ẩn fragment hiện tại (RoomDetail)
+                            ft.hide(RoomDetailFragment.this);
+                            ft.addToBackStack(null);  // Cho phép quay lại
+                            ft.commit();
                         }
                     });
 
@@ -539,10 +564,7 @@ public class RoomDetailFragment extends Fragment {
             public void run() {
                 executor.execute(() -> {
                     for (Device device : deviceList) {
-                        List<ChartEntry> entries = DatabaseHelper.loadChartData(
-                                device.getDiaChiMAC() + "_online",
-                                new Date(System.currentTimeMillis() - 10_000)
-                        );
+                        List<ChartEntry> entries = DatabaseHelper.getStatusDevice(device.getDiaChiMAC() + "_online");
 
                         if (!entries.isEmpty()) {
                             ChartEntry latest = entries.get(entries.size() - 1);

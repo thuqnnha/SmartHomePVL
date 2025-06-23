@@ -59,10 +59,12 @@ public class NaviActivity extends AppCompatActivity {
         // Mặc định load Fragment "Nhà"
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new HomeFragment())
+//                    .replace(R.id.fragment_container, new HomeFragment())
+                    .replace(R.id.fragment_container, new CameraFragment())
                     //.addToBackStack(null)
                     .commit();
-            navigationView.setCheckedItem(R.id.nav_home);
+//            navigationView.setCheckedItem(R.id.nav_home);
+            navigationView.setCheckedItem(R.id.nav_camera);
         }
 
         // Xử lý chọn menu
@@ -70,8 +72,12 @@ public class NaviActivity extends AppCompatActivity {
             Fragment selectedFragment = null;
             int id = item.getItemId();
 
-            if (id == R.id.nav_home) {
-                selectedFragment = new HomeFragment();
+//            if (id == R.id.nav_home) {
+//                selectedFragment = new HomeFragment();
+//            }
+
+            if (id == R.id.nav_camera) {
+                selectedFragment = new CameraFragment();
             }
 
             if (selectedFragment != null) {

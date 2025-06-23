@@ -232,33 +232,33 @@ public class DatabaseHelper {
         });
     }
 
-    public void loadCameraList(CameraFragment.DeviceCallback callback) {
-        executorService.execute(() -> {
-            String query = "SELECT ID, DiaChiMAC, TenThietBi, LoaiThietBi FROM smarthome_device WHERE LoaiThietBi = 0";
-            List<Device> cameraList = new ArrayList<>();
-
-            try (Connection conn = connect();
-                 PreparedStatement ps = conn.prepareStatement(query)) {
-
-                ResultSet rs = ps.executeQuery();
-
-                while (rs.next()) {
-                    int id = rs.getInt("ID");
-                    String mac = rs.getString("DiaChiMAC");
-                    String ten = rs.getString("TenThietBi");
-                    int loai = rs.getInt("LoaiThietBi");
-
-                    cameraList.add(new Device(id, mac, ten, loai));
-                }
-
-                new Handler(Looper.getMainLooper()).post(() -> callback.onDevicesLoaded(cameraList));
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                new Handler(Looper.getMainLooper()).post(() -> callback.onError("Lỗi khi tải danh sách camera"));
-            }
-        });
-    }
+//    public void loadCameraList(CameraFragment.DeviceCallback callback) {
+//        executorService.execute(() -> {
+//            String query = "SELECT ID, DiaChiMAC, TenThietBi, LoaiThietBi FROM smarthome_device WHERE LoaiThietBi = 0";
+//            List<Device> cameraList = new ArrayList<>();
+//
+//            try (Connection conn = connect();
+//                 PreparedStatement ps = conn.prepareStatement(query)) {
+//
+//                ResultSet rs = ps.executeQuery();
+//
+//                while (rs.next()) {
+//                    int id = rs.getInt("ID");
+//                    String mac = rs.getString("DiaChiMAC");
+//                    String ten = rs.getString("TenThietBi");
+//                    int loai = rs.getInt("LoaiThietBi");
+//
+//                    cameraList.add(new Device(id, mac, ten, loai));
+//                }
+//
+//                new Handler(Looper.getMainLooper()).post(() -> callback.onDevicesLoaded(cameraList));
+//
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                new Handler(Looper.getMainLooper()).post(() -> callback.onError("Lỗi khi tải danh sách camera"));
+//            }
+//        });
+//    }
     public static boolean insertCamera(String DiaChiMAC, String TenThietBi, int IDPhong) {
         String query = "INSERT INTO smarthome_device (DiaChiMAC, TenThietBi, LoaiThietBi, IDPhong) VALUES (?,?,?,?)";
         try (Connection connection = connect();
@@ -338,6 +338,37 @@ public class DatabaseHelper {
              PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setTimestamp(1, new java.sql.Timestamp(startTime.getTime()));
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                String timeOn = rs.getTime("TimeOn").toString();   // Định dạng sẵn là HH:mm:ss
+                String timeOff = rs.getTime("TimeOff").toString();
+
+                ChartEntry entry = new ChartEntry(
+                        rs.getTimestamp("DateTime"),      // Dạng java.util.Date
+                        timeOn,
+                        timeOff,
+                        rs.getString("Status"),
+                        rs.getFloat("Current"),
+                        rs.getFloat("Voltage"),
+                        rs.getFloat("Temperature")
+                );
+
+                chartList.add(entry);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return chartList;
+    }
+    public static List<ChartEntry> getStatusDevice(String MACID) {
+        List<ChartEntry> chartList = new ArrayList<>();
+        String query = "SELECT DateTime, TimeOn, TimeOff, Status, Current, Voltage, Temperature FROM " + MACID + " ORDER BY ID DESC LIMIT 1";
+        Log.d("ChartEntryDebug", query);
+        try (Connection conn = connect();
+             PreparedStatement ps = conn.prepareStatement(query)) {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {

@@ -44,14 +44,13 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             Device device = deviceList.get(i);
             if (device.getDiaChiMAC().equals(macAddress)) {
                 device.setLatestEntry(latestEntry);
-                notifyItemChanged(i); // chỉ cập nhật item đó
+//                notifyItemChanged(i); // chỉ cập nhật item đó
+                notifyItemChanged(i, "updateDataOnly");
+
                 break;
             }
         }
     }
-
-
-
 
     @NonNull
     @Override
@@ -68,30 +67,52 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
         ChartEntry latest = device.getLatestEntry();
         if (latest != null) {
-            holder.tvTimeRange.setText(latest.gettimeOn() + "\n" + latest.gettimeOff());
-
-            String params = String.format(Locale.getDefault(), "%.2fA\n%.2fV\n%.2f°C",
-                    latest.getCurrent(), latest.getVoltage(), latest.getTemperature());
-            holder.tvParams.setText(params);
-
-            String status = latest.getStatus();
-            if ("OFF".equals(status)) {
-                holder.btnOff.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F44336")));
-                holder.btnOn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F5F5F5")));
-                holder.btnAuto.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F5F5F5")));
-            } else if("ON".equals(status)) {
-                holder.btnOn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#4CAF50")));
-                holder.btnOff.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F5F5F5")));
-                holder.btnAuto.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F5F5F5")));
-            }else if("ON/OFF".equals(status)) {
-                holder.btnAuto.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF9800")));
-                holder.btnOn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F5F5F5")));
-                holder.btnOff.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F5F5F5")));
+            // Tối ưu so sánh TimeRange
+            String newTimeRange = latest.gettimeOn() + "\n" + latest.gettimeOff();
+            CharSequence currentTimeRange = holder.tvTimeRange.getText();
+            if (!newTimeRange.contentEquals(currentTimeRange)) {
+                holder.tvTimeRange.setText(newTimeRange);
             }
-        } else {
-            // nếu chưa có dữ liệu
-            holder.tvParams.setText("Đang tải...");
-            holder.tvTimeRange.setText("");
+
+            // Tối ưu so sánh Params
+            String newParams = String.format(Locale.getDefault(), "%.2fA\n%.2fV\n%.2f°C",
+                    latest.getCurrent(), latest.getVoltage(), latest.getTemperature());
+            CharSequence currentParams = holder.tvParams.getText();
+            if (!newParams.contentEquals(currentParams)) {
+                holder.tvParams.setText(newParams);
+            }
+
+            // Tối ưu cập nhật màu status
+            String status = latest.getStatus();
+
+            final ColorStateList red = ColorStateList.valueOf(Color.parseColor("#F44336"));
+            final ColorStateList green = ColorStateList.valueOf(Color.parseColor("#4CAF50"));
+            final ColorStateList orange = ColorStateList.valueOf(Color.parseColor("#FF9800"));
+            final ColorStateList gray = ColorStateList.valueOf(Color.parseColor("#F5F5F5"));
+
+            // Cập nhật màu từng nút theo trạng thái nếu khác
+            if ("OFF".equals(status)) {
+                if (!red.equals(holder.btnOff.getBackgroundTintList()))
+                    holder.btnOff.setBackgroundTintList(red);
+                if (!gray.equals(holder.btnOn.getBackgroundTintList()))
+                    holder.btnOn.setBackgroundTintList(gray);
+                if (!gray.equals(holder.btnAuto.getBackgroundTintList()))
+                    holder.btnAuto.setBackgroundTintList(gray);
+            } else if ("ON".equals(status)) {
+                if (!green.equals(holder.btnOn.getBackgroundTintList()))
+                    holder.btnOn.setBackgroundTintList(green);
+                if (!gray.equals(holder.btnOff.getBackgroundTintList()))
+                    holder.btnOff.setBackgroundTintList(gray);
+                if (!gray.equals(holder.btnAuto.getBackgroundTintList()))
+                    holder.btnAuto.setBackgroundTintList(gray);
+            } else if ("ON/OFF".equals(status)) {
+                if (!orange.equals(holder.btnAuto.getBackgroundTintList()))
+                    holder.btnAuto.setBackgroundTintList(orange);
+                if (!gray.equals(holder.btnOn.getBackgroundTintList()))
+                    holder.btnOn.setBackgroundTintList(gray);
+                if (!gray.equals(holder.btnOff.getBackgroundTintList()))
+                    holder.btnOff.setBackgroundTintList(gray);
+            }
         }
 
 

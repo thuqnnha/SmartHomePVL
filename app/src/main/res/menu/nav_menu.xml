@@ -7,8 +7,8 @@
 <!--        android:id="@+id/nav_profile"-->
 <!--        android:title="Tôi"-->
 <!--        android:icon="@drawable/ic_person" />-->
-<!--    <item-->
-<!--        android:id="@+id/nav_camera"-->
-<!--        android:title="Camera"-->
-<!--        android:icon="@drawable/ic_camera_indoor" />-->
+    <item
+        android:id="@+id/nav_camera"
+        android:title="Camera"
+        android:icon="@drawable/ic_camera_indoor" />
 </menu>
